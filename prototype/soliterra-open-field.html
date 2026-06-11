@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soliterra — ศึกทุ่งโล่ง (Vertical Slice)</title>
+<style>
+:root{
+  --ink:#15181f; --ink2:#2a2f3a;
+  --paper:#e9dcc0; --paper2:#d9c8a4; --paper3:#cdbd97;
+  --navy:#2b3a5c; --navyD:#1c2740;
+  --crimson:#8e2b2b; --crimsonD:#6b1f1f;
+  --gold:#c19a4b; --goldL:#e3c87f;
+  --forest:#5d6b45; --hill:#a89263;
+  --serif: Georgia,'Times New Roman','Sukhumvit Set','Thonburi','Leelawadee UI',Tahoma,serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--ink); color:var(--paper); font-family:var(--serif);
+  min-height:100vh; display:flex; flex-direction:column;
+  background-image:radial-gradient(ellipse at 50% 0%, #232a3a 0%, var(--ink) 60%);
+}
+header{
+  text-align:center; padding:14px 10px 10px;
+  border-bottom:1px solid rgba(193,154,75,.35);
+}
+header h1{
+  font-size:1.45rem; letter-spacing:.12em; color:var(--goldL); font-weight:600;
+}
+header .sub{font-size:.8rem; color:#9aa3b5; letter-spacing:.28em; text-transform:uppercase; margin-top:2px}
+#topbar{
+  display:flex; gap:18px; justify-content:center; align-items:center;
+  padding:8px; font-size:.92rem; color:var(--paper2);
+}
+#topbar .obj{color:var(--goldL)}
+#topbar .turnbox{border:1px solid rgba(193,154,75,.4); padding:2px 12px; border-radius:2px}
+#layout{
+  display:flex; gap:14px; padding:10px 14px 18px; justify-content:center;
+  flex:1; flex-wrap:wrap;
+}
+#mapwrap{
+  background:linear-gradient(160deg,var(--paper) 0%,var(--paper2) 70%,var(--paper3) 100%);
+  border:1px solid #3a3022; border-radius:4px;
+  box-shadow:0 0 0 6px var(--ink2), 0 8px 30px rgba(0,0,0,.6);
+  padding:6px; position:relative;
+}
+#board{display:block}
+.hex{stroke:#7a6a4a; stroke-width:1; cursor:pointer; transition:opacity .12s}
+.hex.plain{fill:#d8c9a2}
+.hex.forest{fill:#9aa37b}
+.hex.hill{fill:#c2ab79}
+.hex.move{fill:#a9c0d8 !important}
+.hex.atk{stroke:var(--crimson); stroke-width:2.5}
+.hex.trapsel{stroke:#3f6d35; stroke-width:2.5; stroke-dasharray:4 3}
+.tlabel{font-size:11px; fill:#6b5c3e; pointer-events:none; font-family:var(--serif)}
+.unit{cursor:pointer}
+.unit circle.body{stroke-width:2}
+.unit.pl circle.body{fill:var(--navy); stroke:var(--goldL)}
+.unit.en circle.body{fill:var(--crimson); stroke:#3c1212}
+.unit.sel circle.body{stroke:#fff; stroke-width:3}
+.unit.acted{opacity:.55}
+.unit text.init{fill:#f4ead0; font-weight:bold; text-anchor:middle; pointer-events:none; font-family:var(--serif)}
+.hpbarbg{fill:#3a3022} .hpbar{fill:#cfe3b0} .en .hpbar{fill:#f0b9a0}
+.morbar{fill:#7fa3d0} .en .morbar{fill:#d8a04a}
+.intent{stroke:#a02020; stroke-width:2; stroke-dasharray:6 4; fill:none; marker-end:url(#arrowR); opacity:.85}
+.trapicon{font-size:13px; pointer-events:none}
+#panel{
+  width:330px; min-width:300px; display:flex; flex-direction:column; gap:10px;
+}
+.card{
+  background:linear-gradient(170deg,var(--paper),var(--paper2));
+  color:#2a2417; border-radius:3px; padding:12px 14px;
+  border:1px solid #3a3022; box-shadow:0 4px 14px rgba(0,0,0,.5);
+}
+.card h3{
+  font-size:.78rem; letter-spacing:.22em; text-transform:uppercase;
+  color:#6b5328; border-bottom:1px solid #b5a070; padding-bottom:5px; margin-bottom:8px;
+}
+#unitcard .uname{font-size:1.12rem; font-weight:bold; color:#1d2840}
+#unitcard .urole{font-size:.82rem; color:#6b5c3e; margin-bottom:6px}
+.statrow{display:flex; align-items:center; gap:8px; font-size:.85rem; margin:4px 0}
+.statrow .lab{width:64px; color:#5a4d33}
+.bar{flex:1; height:9px; background:#b5a070; border-radius:2px; overflow:hidden; border:1px solid #8d7a52}
+.bar > div{height:100%}
+.bar .hp{background:#5d7a3f} .bar .mo{background:#3f5d8a}
+.minirow{display:flex; gap:14px; font-size:.85rem; color:#3c3322; margin-top:6px}
+.passive{
+  margin-top:8px; font-size:.8rem; background:rgba(43,58,92,.08);
+  border-left:3px solid var(--navy); padding:6px 8px; color:#33301f;
+}
+.abilities{display:flex; flex-direction:column; gap:6px; margin-top:8px}
+button{
+  font-family:var(--serif); cursor:pointer; border-radius:3px;
+  border:1px solid #3a3022; padding:7px 10px; font-size:.88rem;
+  background:linear-gradient(180deg,#33415f,#26334d); color:#f0e6cc;
+  letter-spacing:.04em;
+}
+button:hover:not(:disabled){filter:brightness(1.15)}
+button:disabled{opacity:.45; cursor:default}
+button.minor{background:linear-gradient(180deg,#c9b88f,#b5a274); color:#33291a}
+#endturn{
+  align-self:center; width:96px; height:96px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #b04040, var(--crimsonD) 70%);
+  border:3px solid #4a1414; color:#f4d9c0; font-size:.95rem; font-weight:bold;
+  box-shadow:0 4px 10px rgba(0,0,0,.6), inset 0 2px 6px rgba(255,220,180,.25);
+  letter-spacing:.08em; line-height:1.25;
+}
+#endturn:hover:not(:disabled){transform:rotate(-3deg) scale(1.04)}
+#log{
+  flex:1; min-height:150px; max-height:300px; overflow-y:auto;
+  font-size:.84rem; line-height:1.55; color:#33291a;
+}
+#log p{margin-bottom:5px; border-bottom:1px dotted #b5a070; padding-bottom:4px}
+#log p.story{color:#5a2020; font-style:italic}
+#log p.gold{color:#7a5d1e; font-weight:bold}
+.modal{
+  position:fixed; inset:0; background:rgba(10,12,18,.82);
+  display:flex; align-items:center; justify-content:center; z-index:50; padding:16px;
+}
+.letter{
+  max-width:540px; background:linear-gradient(170deg,var(--paper),var(--paper2));
+  color:#2a2417; padding:30px 34px; border-radius:2px;
+  border:1px solid #3a3022; box-shadow:0 16px 60px rgba(0,0,0,.8);
+  position:relative;
+}
+.letter::before{
+  content:""; position:absolute; inset:7px; border:1px solid rgba(107,83,40,.5); pointer-events:none;
+}
+.letter h2{color:#1d2840; letter-spacing:.1em; margin-bottom:12px; font-size:1.3rem}
+.letter p{margin-bottom:10px; line-height:1.7; font-size:.95rem}
+.letter .sig{text-align:right; font-style:italic; color:#6b5328}
+.letter .actions{display:flex; gap:10px; justify-content:center; margin-top:16px}
+/* duel */
+#duelbox{max-width:620px; width:100%}
+.duelheads{display:flex; justify-content:space-between; gap:16px; margin-bottom:10px}
+.dhead{flex:1; text-align:center}
+.dhead .dname{font-weight:bold; font-size:1.05rem}
+.dhead.k .dname{color:#1d2840} .dhead.e .dname{color:var(--crimsonD)}
+.dbars{margin-top:5px}
+.dbars .bar{height:11px}
+.dbars .sta{background:#a8852f}
+#duelnarr{
+  min-height:84px; background:rgba(43,58,92,.07); border:1px dashed #8d7a52;
+  padding:10px 12px; font-size:.9rem; line-height:1.6; margin:8px 0; font-style:italic;
+}
+#duelhint{font-size:.84rem; color:#6b3a1e; min-height:20px; margin-bottom:6px}
+.stances{display:flex; gap:10px; justify-content:center}
+.stances button{flex:1; padding:12px 6px; font-size:.95rem}
+.stances button small{display:block; font-size:.7rem; opacity:.8; margin-top:3px}
+#howto{font-size:.8rem; line-height:1.6; color:#3c3322}
+#howto b{color:#1d2840}
+details summary{cursor:pointer; color:#6b5328; font-size:.82rem; letter-spacing:.1em}
+@media (max-width:1080px){ #panel{width:100%; max-width:560px} }
+</style>
+</head>
+<body>
+<header>
+  <h1>ศึกทุ่งโล่ง</h1>
+  <div class="sub">Soliterra · Battle of the Open Field · CY1</div>
+</header>
+<div id="topbar">
+  <span class="turnbox">เทิร์น <b id="turnnum">1</b></span>
+  <span>ฝ่าย: <b id="whose">Kaster</b></span>
+  <span class="obj" id="objective">เป้าหมาย: โค่นแม่ทัพ Notos หรือทำลายขวัญทัพศัตรูทั้งหมด</span>
+</div>
+<div id="layout">
+  <div id="mapwrap">
+    <svg id="board" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div id="panel">
+    <div class="card" id="unitcard">
+      <h3>บันทึกกองทหาร</h3>
+      <div id="unitinfo"><em style="font-size:.85rem;color:#6b5c3e">เลือกกองทหารบนแผนที่</em></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <button id="endturn">จบเทิร์น<br>ฝ่ายเรา</button>
+    </div>
+    <div class="card" style="flex:1;display:flex;flex-direction:column">
+      <h3>สมุดบันทึกสงคราม</h3>
+      <div id="log"></div>
+    </div>
+    <div class="card">
+      <details>
+        <summary>วิธีเล่น</summary>
+        <div id="howto">
+          คลิกกองของเรา → ช่อง<b>ฟ้า</b>คือระยะเดิน → ศัตรูขอบ<b>แดง</b>คือเป้าโจมตี
+          แต่ละกอง เดิน 1 + โจมตี 1 ต่อเทิร์น<br>
+          <b>ขวัญ (แถบฟ้า)</b> หมด = กองแตกทัพหนีถาวร · ถูกตีโอบ (เราติดศัตรู ≥2 กอง) เจ็บทั้งพลและขวัญ<br>
+          <b>ป่า</b> ลดดาเมจที่ได้รับ · <b>เนิน</b> เพิ่มดาเมจตอนโจมตี<br>
+          ทักษะประจำตัวอยู่ในการ์ดกองทหาร — Kaster อ่านสนามได้ 1 ครั้ง, Bon วางกับดักเพลิงในป่า, Alexsen ยิ่งถูกล้อมยิ่งแรง<br>
+          เข้าประชิดแม่ทัพ Notos ด้วยกองของ Kaster เพื่อ<b>ท้าประลอง</b>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+<div id="modalhost"></div>
+
+<script>
+"use strict";
+/* ============ MAP & DATA ============ */
+const COLS=13, ROWS=9, SZ=33;
+const SQ3=Math.sqrt(3);
+const TER=[
+"..ff.......hh",
+".fff......hh.",
+"..f......hh..",
+".............",
+"......f..hh..",
+"......ff.....",
+".f.......h...",
+".ff......hh..",
+"..f.......hh."
+];
+const TNAME={'.':'ทุ่ง','f':'ป่า','h':'เนิน'};
+function ter(c,r){ return TER[r][c]; }
+
+let units=[], turn=1, phase='player', selected=null, mode='none', trapHex=null, gameOver=false;
+let readUsed=false, trapUsed=false, bladeUsed=false, reinforced=false, intents=[];
+
+function mk(id,name,off,side,c,r,o){
+  return Object.assign({id,name,off,side,c,r,
+    max:o.max,tr:o.max,atk:o.atk,rng:o.rng,mov:o.mov,
+    mor:100,moraleImmune:false,moved:false,attacked:false,dead:false,
+    init:o.init,role:o.role,pas:o.pas||''},o.x||{});
+}
+function spawnAll(){
+  units=[
+    mk('kaster','กองบัญชาการ','Kaster (LDR 96)','pl',1,4,{max:120,atk:18,rng:2,mov:3,init:'K',role:'Line Infantry · ผู้บัญชาการ',
+      pas:'Read the Field — เผยแผนศัตรู 1 ครั้ง/ศึก · ??? (ดาบประจำตระกูล)'}),
+    mk('alexsen','กองทะลวงหน้า','Alexsen (WAR 98)','pl',1,2,{max:140,atk:24,rng:1,mov:3,init:'A',role:'Melee Corps',
+      pas:'Juggernaut — ขวัญไม่มีวันตก · ดาเมจ +12% ต่อศัตรูที่อยู่ติดกันเกิน 1 กอง',x:{moraleImmune:true}}),
+    mk('bon','กองธนูระยะไกล','Bon shi hai (INT 94)','pl',0,5,{max:90,atk:16,rng:3,mov:3,init:'B',role:'Light Infantry',
+      pas:'Stratagem — วางกับดักเพลิงซ่อนในป่า 1 จุด/ศึก'}),
+    mk('line1','กองพันเคราส์ที่ 1','ร.อ. เดมอส (LDR 61)','pl',2,3,{max:120,atk:16,rng:2,mov:2,init:'I',role:'Line Infantry'}),
+    mk('line2','กองพันเคราส์ที่ 2','ร.อ. ฟิลอน (LDR 58)','pl',2,6,{max:120,atk:16,rng:2,mov:2,init:'II',role:'Line Infantry'}),
+    mk('gen','ทัพหลวง Notos','แม่ทัพแห่ง Notos (WAR 88)','en',10,4,{max:150,atk:20,rng:1,mov:2,init:'G',role:'Royal Guard',
+      pas:'Iron Standard — กองศัตรูรอบตัวขวัญไม่ตกจากการเห็นพวกแตกทัพ'}),
+    mk('e1','กรมทหารใต้ที่ 3','','en',9,1,{max:110,atk:14,rng:2,mov:2,init:'3',role:'Line Infantry'}),
+    mk('e2','กรมทหารใต้ที่ 5','','en',10,2,{max:110,atk:14,rng:2,mov:2,init:'5',role:'Line Infantry'}),
+    mk('e3','กองดาบโนทอส','','en',9,5,{max:120,atk:17,rng:1,mov:3,init:'N',role:'Melee Corps'}),
+    mk('e4','กรมทหารใต้ที่ 7','','en',10,6,{max:110,atk:14,rng:2,mov:2,init:'7',role:'Line Infantry'}),
+    mk('e5','กองม้าเร็วใต้','','en',11,7,{max:95,atk:16,rng:1,mov:3,init:'C',role:'Cavalry'})
+  ];
+}
+function reinforce(){
+  const spots=[[0,0],[0,8]];
+  const names=['กองโอบที่ 1','กองม้าโอบหลัง'];
+  spots.forEach((s,i)=>{
+    if(!unitAt(s[0],s[1])) units.push(mk('r'+i,names[i],'','en',s[0],s[1],
+      {max:75,atk:14,rng:1,mov:3,init:'X',role:i==1?'Cavalry':'Melee Corps'}));
+  });
+}
+
+/* ============ HEX MATH (pointy-top, odd-r) ============ */
+function nbrs(c,r){
+  const odd=r&1;
+  const d= odd? [[1,0],[-1,0],[1,-1],[0,-1],[1,1],[0,1]]
+              : [[1,0],[-1,0],[0,-1],[-1,-1],[0,1],[-1,1]];
+  return d.map(v=>[c+v[0],r+v[1]]).filter(p=>p[0]>=0&&p[0]<COLS&&p[1]>=0&&p[1]<ROWS);
+}
+function ax(c,r){ return [c-((r-(r&1))>>1), r]; }
+function dist(c1,r1,c2,r2){
+  const [q1,s1]=ax(c1,r1),[q2,s2]=ax(c2,r2);
+  return (Math.abs(q1-q2)+Math.abs(s1-s2)+Math.abs(q1+s1-q2-s2))/2;
+}
+function px(c,r){ return [SZ*SQ3*(c+0.5*(r&1))+SZ+6, SZ*1.5*r+SZ+6]; }
+function unitAt(c,r){ return units.find(u=>!u.dead&&u.c===c&&u.r===r); }
+function reach(u){
+  const seen={}, out=[], q=[[u.c,u.r,0]]; seen[u.c+','+u.r]=true;
+  while(q.length){
+    const [c,r,d]=q.shift();
+    if(d>0) out.push([c,r]);
+    if(d>=u.mov) continue;
+    for(const [nc,nr] of nbrs(c,r)){
+      const k=nc+','+nr;
+      if(seen[k]) continue;
+      const occ=unitAt(nc,nr);
+      if(occ) {seen[k]=true; continue;}
+      seen[k]=true; q.push([nc,nr,d+1]);
+    }
+  }
+  return out;
+}
+function targets(u){
+  return units.filter(t=>!t.dead&&t.side!==u.side&&dist(u.c,u.r,t.c,t.r)<=u.rng);
+}
+
+/* ============ RENDER ============ */
+const svg=document.getElementById('board');
+function hexPts(cx,cy){
+  let s='';
+  for(let i=0;i<6;i++){
+    const a=Math.PI/180*(60*i-30);
+    s+=(cx+SZ*Math.cos(a))+','+(cy+SZ*Math.sin(a))+' ';
+  }
+  return s.trim();
+}
+function render(){
+  const W=SZ*SQ3*(COLS+0.5)+12, H=SZ*1.5*(ROWS-1)+2*SZ+12;
+  svg.setAttribute('width',W); svg.setAttribute('height',H);
+  let s='<defs><marker id="arrowR" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#a02020"/></marker></defs>';
+  const mv = (selected&&mode==='move')? reach(selected).map(p=>p.join(',')) : [];
+  const at = (selected&&!selected.attacked&&selected.side==='pl')? targets(selected).map(t=>t.id):[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const [x,y]=px(c,r), t=ter(c,r);
+    const cls='hex '+(t==='f'?'forest':t==='h'?'hill':'plain')
+      +(mv.includes(c+','+r)?' move':'')
+      +(mode==='trap'&&t==='f'&&dist(c,r,getU('bon').c,getU('bon').r)<=4&&!unitAt(c,r)?' trapsel':'');
+    s+=`<polygon class="${cls}" points="${hexPts(x,y)}" data-c="${c}" data-r="${r}"/>`;
+    if(t!=='.') s+=`<text class="tlabel" x="${x-9}" y="${y+SZ-9}">${t==='f'?'♣':'▲'}</text>`;
+  }
+  if(trapHex){ const [x,y]=px(trapHex[0],trapHex[1]); s+=`<text class="trapicon" x="${x-7}" y="${y-12}">✸</text>`; }
+  for(const a of intents){
+    const [x1,y1]=px(a.from[0],a.from[1]), [x2,y2]=px(a.to[0],a.to[1]);
+    s+=`<line class="intent" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+  }
+  for(const u of units){
+    if(u.dead) continue;
+    const [x,y]=px(u.c,u.r);
+    const cls='unit '+(u.side==='pl'?'pl':'en')+(u===selected?' sel':'')+((u.side==='pl'&&u.moved&&u.attacked)?' acted':'');
+    const atkcls=at.includes(u.id)?' style="filter:drop-shadow(0 0 5px #a02020)"':'';
+    s+=`<g class="${cls}" data-id="${u.id}"${atkcls}>
+      <circle class="body" cx="${x}" cy="${y}" r="${SZ*0.62}"/>
+      <text class="init" x="${x}" y="${y+5}" font-size="${u.init.length>1?13:17}">${u.init}</text>
+      <rect class="hpbarbg" x="${x-18}" y="${y+SZ*0.62+3}" width="36" height="4"/>
+      <rect class="hpbar" x="${x-18}" y="${y+SZ*0.62+3}" width="${36*u.tr/u.max}" height="4"/>
+      <rect class="hpbarbg" x="${x-18}" y="${y+SZ*0.62+8}" width="36" height="3"/>
+      <rect class="morbar" x="${x-18}" y="${y+SZ*0.62+8}" width="${36*Math.max(0,u.mor)/100}" height="3"/>
+    </g>`;
+  }
+  if(at.length){
+    for(const t of units.filter(u=>at.includes(u.id))){
+      const [x,y]=px(t.c,t.r);
+      s+=`<polygon class="hex atk" points="${hexPts(x,y)}" style="fill:none;pointer-events:none"/>`;
+    }
+  }
+  svg.innerHTML=s;
+  svg.querySelectorAll('.hex').forEach(h=>h.addEventListener('click',()=>hexClick(+h.dataset.c,+h.dataset.r)));
+  svg.querySelectorAll('.unit').forEach(g=>g.addEventListener('click',e=>{e.stopPropagation();unitClick(g.dataset.id);}));
+  document.getElementById('turnnum').textContent=turn;
+  document.getElementById('whose').textContent=phase==='player'?'Kaster':'Notos';
+  drawCard();
+}
+function getU(id){ return units.find(u=>u.id===id); }
+</script>
+<script>
+/* ============ UI CARD & LOG ============ */
+function drawCard(){
+  const el=document.getElementById('unitinfo');
+  if(!selected){ el.innerHTML='<em style="font-size:.85rem;color:#6b5c3e">เลือกกองทหารบนแผนที่</em>'; return; }
+  const u=selected;
+  let ab='';
+  if(u.side==='pl'){
+    if(u.id==='kaster'){
+      ab+=`<button id="btnread" ${readUsed||phase!=='player'?'disabled':''}>👁 Read the Field (เผยแผนศัตรู)</button>`;
+      const g=getU('gen');
+      if(g&&!g.dead&&dist(u.c,u.r,g.c,g.r)===1&&!u.attacked)
+        ab+=`<button id="btnduel">⚔ ท้าประลองแม่ทัพ Notos</button>`;
+    }
+    if(u.id==='bon') ab+=`<button id="btntrap" ${trapUsed||phase!=='player'?'disabled':''}>✸ วางกับดักเพลิง (เลือกช่องป่า)</button>`;
+    if(!u.moved||!u.attacked) ab+=`<button class="minor" id="btnwait">ยืนรอ (จบการกระทำกองนี้)</button>`;
+  }
+  el.innerHTML=`
+    <div class="uname">${u.name}</div>
+    <div class="urole">${u.role}${u.off?' · '+u.off:''}</div>
+    <div class="statrow"><span class="lab">กำลังพล</span><div class="bar"><div class="hp" style="width:${100*u.tr/u.max}%"></div></div><span>${u.tr}/${u.max}</span></div>
+    <div class="statrow"><span class="lab">ขวัญ</span><div class="bar"><div class="mo" style="width:${Math.max(0,u.mor)}%"></div></div><span>${u.moraleImmune?'∞':Math.max(0,u.mor)}</span></div>
+    <div class="minirow"><span>โจมตี ${u.atk}</span><span>ระยะ ${u.rng}</span><span>เดิน ${u.mov}</span><span>ภูมิประเทศ: ${TNAME[ter(u.c,u.r)]}</span></div>
+    ${u.pas?`<div class="passive">${u.pas}</div>`:''}
+    <div class="abilities">${ab}</div>`;
+  const br=document.getElementById('btnread'); if(br) br.onclick=readField;
+  const bt=document.getElementById('btntrap'); if(bt) bt.onclick=()=>{mode='trap'; log('Bon กางแผนที่ — เลือกช่องป่าในระยะ 4 เพื่อซ่อนดินปืน'); render();};
+  const bw=document.getElementById('btnwait'); if(bw) bw.onclick=()=>{u.moved=u.attacked=true; selected=null; mode='none'; render();};
+  const bd=document.getElementById('btnduel'); if(bd) bd.onclick=startDuel;
+}
+function log(msg,cls){
+  const d=document.getElementById('log');
+  d.insertAdjacentHTML('afterbegin',`<p class="${cls||''}">เทิร์น ${turn} — ${msg}</p>`);
+}
+
+/* ============ INTERACTION ============ */
+function unitClick(id){
+  if(phase!=='player'||gameOver) return;
+  const u=getU(id);
+  if(u.side==='pl'){
+    selected=u; mode=u.moved?'none':'move'; render();
+  } else if(selected&&!selected.attacked&&dist(selected.c,selected.r,u.c,u.r)<=selected.rng){
+    attack(selected,u); 
+  } else { selected=u; mode='none'; render(); }
+}
+function hexClick(c,r){
+  if(phase!=='player'||gameOver||!selected) return;
+  if(mode==='trap'){
+    if(ter(c,r)==='f'&&dist(c,r,getU('bon').c,getU('bon').r)<=4&&!unitAt(c,r)){
+      trapHex=[c,r]; trapUsed=true; mode='none';
+      log('Bon ฝังดินปืนใต้ใบไม้แห้ง — ศัตรูที่เหยียบจะได้พบของขวัญ','gold');
+      render();
+    }
+    return;
+  }
+  if(mode==='move'&&!selected.moved){
+    if(reach(selected).some(p=>p[0]===c&&p[1]===r)){
+      selected.c=c; selected.r=r; selected.moved=true; mode='none'; render();
+    }
+  }
+}
+
+/* ============ COMBAT ============ */
+function rnd(a,b){ return a+Math.random()*(b-a); }
+function adjEnemies(u){ return nbrs(u.c,u.r).map(p=>unitAt(p[0],p[1])).filter(t=>t&&t.side!==u.side).length; }
+function dmgCalc(a,d){
+  let m=0.6+0.4*a.tr/a.max;
+  if(ter(a.c,a.r)==='h') m*=1.15;
+  if(ter(d.c,d.r)==='f') m*=0.75;
+  if(a.id==='alexsen'){ const n=adjEnemies(a); if(n>1) m*=1+0.12*(n-1); }
+  const flank = nbrs(d.c,d.r).map(p=>unitAt(p[0],p[1])).filter(t=>t&&t.side===a.side).length>=2;
+  if(flank) m*=1.25;
+  return {dmg:Math.round(a.atk*m*rnd(0.85,1.15)), flank};
+}
+function applyMorale(u,amt){
+  if(u.moraleImmune) return;
+  if(u.side==='en'){
+    const g=getU('gen');
+    if(g&&!g.dead&&u!==g&&dist(u.c,u.r,g.c,g.r)<=1&&amt>0&&amt<15) amt=Math.floor(amt/2);
+  }
+  u.mor-=amt;
+  if(u.mor<=0&&!u.dead) routUnit(u);
+}
+function routUnit(u){
+  u.dead=true;
+  log(`${u.name} ${u.side==='en'?'ขวัญแตก ทิ้งอาวุธหนีกระเจิง!':'แตกทัพ... ถอยร่นออกจากสนาม'}`, u.side==='en'?'gold':'story');
+  for(const o of units){
+    if(!o.dead&&o.side===u.side&&dist(o.c,o.r,u.c,u.r)<=2) applyMorale(o,12);
+  }
+  checkEnd();
+}
+function casualty(u,dmg,flank){
+  u.tr-=dmg;
+  if(u.tr<=0){
+    if(u.id==='kaster'&&!bladeUsed){
+      bladeUsed=true; u.tr=35; u.mor=Math.max(u.mor,45);
+      log('คมดาบศัตรูพุ่งเข้าจุดตาย — แต่มือของ Kaster ขยับเองราวกับรู้ล่วงหน้า ดาบขึ้นสนิมเล่มนั้นรับไว้พอดีเส้นผม... โชค? หรืออย่างอื่น','story');
+      return;
+    }
+    u.dead=true; u.tr=0;
+    log(`${u.name} ถูกบดขยี้สิ้นทั้งกอง`, u.side==='pl'?'story':'');
+    for(const o of units){ if(!o.dead&&o.side===u.side&&dist(o.c,o.r,u.c,u.r)<=2) applyMorale(o,18); }
+    checkEnd();
+  } else {
+    applyMorale(u, Math.round(dmg*0.45)+(flank?10:0));
+  }
+}
+function attack(a,d,counter){
+  const {dmg,flank}=dmgCalc(a,d);
+  log(`${a.name} ${dist(a.c,a.r,d.c,d.r)>1?'ระดมยิง':'ตะลุมบอน'} ${d.name} — สูญเสีย ${dmg} นาย${flank?' (ถูกตีโอบ!)':''}`);
+  casualty(d,dmg,flank);
+  if(!counter&&!d.dead&&dist(a.c,a.r,d.c,d.r)===1){
+    const c=dmgCalc(d,a); const cd=Math.round(c.dmg*0.55);
+    log(`${d.name} ตอบโต้ — ${a.name} สูญเสีย ${cd} นาย`);
+    casualty(a,cd,false);
+  }
+  if(!counter){ a.attacked=true; a.moved=true; }
+  if(a.side==='pl'){ selected=a.dead?null:a; mode='none'; }
+  render();
+}
+
+/* ============ READ THE FIELD ============ */
+function planFor(e){
+  const ts=units.filter(u=>!u.dead&&u.side==='pl');
+  if(!ts.length) return null;
+  let best=null,bd=1e9;
+  for(const t of ts){ const d=dist(e.c,e.r,t.c,t.r); if(d<bd){bd=d;best=t;} }
+  return best;
+}
+function readField(){
+  readUsed=true; intents=[];
+  for(const e of units.filter(u=>!u.dead&&u.side==='en')){
+    const t=planFor(e);
+    if(t) intents.push({from:[e.c,e.r],to:[t.c,t.r]});
+  }
+  log('Kaster หลับตาครู่หนึ่ง... เส้นทางของทุกกองศัตรูปรากฏชัดในใจ ลูกศรหมึกแดงคือเป้าหมายของพวกมันในเทิร์นหน้า','gold');
+  render();
+}
+</script>
+<script>
+/* ============ ENEMY TURN ============ */
+function stepToward(e,t){
+  const cells=reach(e);
+  if(!cells.length) return;
+  let best=null,bd=dist(e.c,e.r,t.c,t.r);
+  for(const [c,r] of cells){
+    const d=dist(c,r,t.c,t.r);
+    if(d<bd||(d===bd&&best===null&&d<dist(e.c,e.r,t.c,t.r))){bd=d;best=[c,r];}
+  }
+  if(best){
+    e.c=best[0]; e.r=best[1];
+    if(trapHex&&e.c===trapHex[0]&&e.r===trapHex[1]){
+      log(`${e.name} เหยียบกับดักของ Bon — เปลวไฟพวยพุ่งจากพื้นป่า! สูญเสีย 30 นาย ขวัญสั่นคลอน`,'gold');
+      trapHex=null; e.tr-=30;
+      if(e.tr<=0){e.dead=true; log(`${e.name} ถูกเพลิงกลืนทั้งกอง`,'gold'); checkEnd();}
+      else applyMorale(e,35);
+    }
+  }
+}
+function enemyTurn(){
+  phase='enemy'; selected=null; mode='none'; intents=[]; render();
+  const es=units.filter(u=>!u.dead&&u.side==='en');
+  let i=0;
+  function next(){
+    if(gameOver) return;
+    if(i>=es.length){ endEnemyTurn(); return; }
+    const e=es[i++];
+    if(e.dead){ next(); return; }
+    if(e.id==='gen'&&turn<5&&!units.some(u=>!u.dead&&u.side==='pl'&&dist(u.c,u.r,e.c,e.r)<=3)){
+      next(); return; // แม่ทัพดูถูกศัตรู ยังไม่ขยับ
+    }
+    const t=planFor(e);
+    if(t){
+      if(dist(e.c,e.r,t.c,t.r)>e.rng) stepToward(e,t);
+      const inR=units.filter(u=>!u.dead&&u.side==='pl'&&dist(e.c,e.r,u.c,u.r)<=e.rng);
+      if(inR.length){
+        inR.sort((a,b)=>dist(e.c,e.r,a.c,a.r)-dist(e.c,e.r,b.c,b.r)||a.tr-b.tr);
+        attack(e,inR[0],false);
+      }
+    }
+    render();
+    setTimeout(next,420);
+  }
+  setTimeout(next,350);
+}
+function endEnemyTurn(){
+  if(gameOver) return;
+  turn++;
+  phase='player';
+  for(const u of units){ u.moved=false; u.attacked=false; }
+  if(turn===5&&!reinforced){
+    reinforced=true; reinforce();
+    showLetter('ถูกล้อม!',`<p>เสียงแตรดังจากด้านหลัง — ทัพ Notos อีกสามกองโผล่จากแนวป่าทางตะวันตก เส้นทางถอยถูกตัดขาดแล้ว</p>
+    <p>Bon มองหน้า Kaster: <i>"พวกมันวางแผนล้อมเรามาตั้งแต่ต้น"</i></p>
+    <p>Kaster ตอบเรียบๆ: <i>"งั้นทางออกเดียวคือเดินหน้า — หัวของแม่ทัพมันอยู่บนเนินนั่น"</i></p>`,
+    'รับคำสั่ง');
+    log('ทัพศัตรูโอบหลัง! ไม่มีทางถอยอีกแล้ว — โค่นแม่ทัพคือทางรอดเดียว','story');
+  }
+  log('— ดวงอาทิตย์เคลื่อน เทิร์นใหม่เริ่มขึ้น —');
+  render();
+}
+document.getElementById('endturn').addEventListener('click',()=>{
+  if(phase!=='player'||gameOver) return;
+  enemyTurn();
+});
+
+/* ============ WIN / LOSE ============ */
+function checkEnd(){
+  if(gameOver) return;
+  const k=getU('kaster'), g=getU('gen');
+  if(k.dead){ gameOver=true; defeat('กองบัญชาการแตก — ร่างของ Kaster หายไปในความโกลาหล ประวัติศาสตร์ของ Soliterra สิ้นสุดก่อนจะเริ่ม'); return; }
+  if(!units.some(u=>!u.dead&&u.side==='pl')){ gameOver=true; defeat('กองทัพถูกกวาดล้างสิ้น'); return; }
+  if(g&&g.dead){ gameOver=true; victory('แม่ทัพ Notos ล้มลงต่อหน้าทัพของตน — ความเงียบแผ่ไปทั้งทุ่ง ก่อนเสียงโห่ร้องหนีตายจะระเบิดขึ้น กองทัพใต้ขวัญเสียทั้งสนาม'); return; }
+  if(!units.some(u=>!u.dead&&u.side==='en')){ gameOver=true; victory('ธงสุดท้ายของ Notos ล้มลงบนทุ่งโล่ง'); }
+}
+function victory(t){
+  showLetter('ชัยชนะที่ทุ่งโล่ง',`<p>${t}</p>
+  <p>เด็กหนุ่มวัย 17 จากหมู่บ้านที่ถูกเผา เพิ่งหักกระดูกสันหลังของทัพหลวง Notos — เรื่องเล่าจะเดินทางเร็วกว่าม้าเร็วทุกตัวบนเกาะนี้</p>
+  <p class="sig">— บันทึกสงคราม, ศึกทุ่งโล่ง CY1</p>
+  <p style="font-size:.8rem;color:#6b5328">Vertical Slice จบเพียงเท่านี้ — ศึกถัดไป: The Long Retreat (Arctos แตก)</p>`,
+  'เล่นอีกครั้ง',()=>location.reload());
+}
+function defeat(t){
+  showLetter('ปราชัย',`<p>${t}</p><p style="font-size:.85rem">คำแนะนำจาก Bon: ใช้ป่าฝั่งซ้ายเป็นกำบัง อย่าให้กองใดยืนติดศัตรูสองกองพร้อมกัน และเก็บ Read the Field ไว้ก่อนเปิดศึกใหญ่</p>`,
+  'ลองอีกครั้ง',()=>location.reload());
+}
+
+/* ============ MODAL ============ */
+function showLetter(title,html,btn,cb){
+  const host=document.getElementById('modalhost');
+  host.innerHTML=`<div class="modal"><div class="letter"><h2>${title}</h2>${html}
+    <div class="actions"><button id="mbtn">${btn}</button></div></div></div>`;
+  document.getElementById('mbtn').onclick=()=>{ host.innerHTML=''; if(cb)cb(); render(); };
+}
+
+/* ============ DUEL ============ */
+let duel=null;
+function startDuel(){
+  duel={kh:100,ks:100,eh:130,es:100,round:1,hist:[],bladeUsedInDuel:false,eAggro:0.42};
+  const host=document.getElementById('modalhost');
+  host.innerHTML=`<div class="modal"><div class="letter" id="duelbox">
+    <h2 style="text-align:center">การประลองกลางสนาม</h2>
+    <div class="duelheads">
+      <div class="dhead k"><div class="dname">Kaster <small>(WAR 82)</small></div>
+        <div class="dbars">
+          <div class="statrow"><span class="lab">ร่างกาย</span><div class="bar"><div class="hp" id="dkh" style="width:100%"></div></div></div>
+          <div class="statrow"><span class="lab">แรง</span><div class="bar"><div class="sta" id="dks" style="width:100%"></div></div></div>
+        </div></div>
+      <div class="dhead e"><div class="dname">แม่ทัพ Notos <small>(WAR 88)</small></div>
+        <div class="dbars">
+          <div class="statrow"><span class="lab">ร่างกาย</span><div class="bar"><div class="hp" id="deh" style="width:100%"></div></div></div>
+          <div class="statrow"><span class="lab">แรง</span><div class="bar"><div class="sta" id="des" style="width:100%"></div></div></div>
+        </div></div>
+    </div>
+    <div id="duelnarr">ทหารสองฝ่ายถอยออกเป็นวง — แม่ทัพ Notos หัวเราะ: <i>"เด็กชาวบ้านจะมาวัดดาบกับข้า?"</i><br>กติกา: <b>บุก</b>ชนะ<b>หลอก</b> · <b>หลอก</b>ชนะ<b>ตั้งรับ</b> · <b>ตั้งรับ</b>ชนะ<b>บุก</b> · บุกใช้แรง 25, หลอกใช้ 12, ตั้งรับฟื้นแรง 18</div>
+    <div id="duelhint"></div>
+    <div class="stances">
+      <button data-s="atk">⚔ บุก<small>แรง −25</small></button>
+      <button data-s="feint">🌀 หลอก<small>แรง −12</small></button>
+      <button data-s="def">🛡 ตั้งรับ<small>แรง +18</small></button>
+    </div>
+  </div></div>`;
+  host.querySelectorAll('.stances button').forEach(b=>b.onclick=()=>duelRound(b.dataset.s));
+  duelHint();
+}
+function duelHint(){
+  // hint = ท่าที่ศัตรู "ส่งสัญญาณ" — มันจะทำตามนั้นจริงแค่ ~65%
+  duel.tele=enemyStance();
+  const map={atk:'กล้ามไหล่มันเกร็ง — น่าจะเตรียม "บุก"',feint:'ปลายดาบมันส่ายผิดจังหวะ — กลิ่นของ "การหลอก"',def:'มันถ่ายน้ำหนักไปเท้าหลัง — ท่า "ตั้งรับ"'};
+  document.getElementById('duelhint').textContent='สายตา Kaster จับความเคลื่อนไหว (มันอาจเปลี่ยนใจวินาทีสุดท้าย): '+map[duel.tele];
+}
+function enemyStance(){
+  const r=Math.random();
+  if(duel.es<25) return r<0.6?'def':'feint';
+  if(r<duel.eAggro) return 'atk';
+  if(r<duel.eAggro+0.33) return 'feint';
+  return 'def';
+}
+function beats(a,b){ return (a==='atk'&&b==='feint')||(a==='feint'&&b==='def')||(a==='def'&&b==='atk'); }
+function duelRound(ps){
+  if(ps==='atk'&&duel.ks<25){ document.getElementById('duelnarr').innerHTML='แขนหนักเกินกว่าจะบุก — Kaster ต้องเลือกท่าที่เบากว่า'; return; }
+  const cOf={atk:'def',feint:'atk',def:'feint'};
+  let es;
+  if(duel.hist.length>=2&&Math.random()<0.32){
+    const f={}; duel.hist.slice(-3).forEach(x=>f[x]=(f[x]||0)+1);
+    es=cOf[Object.keys(f).sort((a,b)=>f[b]-f[a])[0]]; // แม่ทัพอ่านลายมือเรา
+  } else es=Math.random()<0.6?duel.tele:enemyStance();
+  if(es==='atk'&&duel.es<25) es='feint';
+  duel.hist.push(ps);
+  const cost={atk:-25,feint:-12,def:18};
+  duel.ks=Math.min(100,duel.ks+cost[ps]);
+  duel.es=Math.min(100,duel.es+cost[es]);
+  let narr='', kd=0, ed=0;
+  const N={atk:'บุก',feint:'หลอก',def:'ตั้งรับ'};
+  if(ps===es){
+    if(ps==='atk'){ kd=16; ed=12; narr='ดาบปะทะดาบกลางอากาศ — ประกายไฟกระเด็น ทั้งคู่เลือดออก!'; }
+    else if(ps==='feint'){ kd=5; ed=5; narr='ต่างฝ่ายต่างหลอก — ปลายดาบเฉี่ยวกันแผ่วๆ'; }
+    else narr='ทั้งคู่ตั้งรับ หายใจลึก เก็บแรง... สายตาล็อกกันไม่กะพริบ';
+  } else if(beats(ps,es)){
+    ed=Math.round(rnd(15,23));
+    narr={atk:'Kaster อ่านจังหวะหลอกออก — ฟันสวนเต็มแรงเข้าลำตัว!',feint:'ท่าหลอกของ Kaster ดึงดาบศัตรูออกนอกทาง แล้วกรีดเฉียบ!',def:'แม่ทัพบุกพล่าน — Kaster ปัดรับแล้วสวนกลับอย่างเย็นเยียบ'}[ps];
+  } else {
+    kd=Math.round(rnd(20,30));
+    narr={atk:'Kaster บุกเข้าไปเจอกำแพงเหล็ก — โดนสวนเข้าซี่โครง!',feint:'แม่ทัพไม่กินกล — ดาบใหญ่ฟาดทะลุท่าหลอก!',def:'ท่าหลอกของแม่ทัพแยบยลกว่า — คมดาบเฉือนผ่านการ์ด'}[ps];
+    duel.eAggro=Math.min(0.65,duel.eAggro+0.07);
+  }
+  duel.kh-=kd; duel.eh-=ed;
+  if(duel.kh<=0&&!duel.bladeUsedInDuel&&!bladeUsed){
+    duel.bladeUsedInDuel=true; bladeUsed=true; duel.kh=12;
+    narr+='<br><b>คมดาบพุ่งเข้าหัวใจ — แต่ดาบสนิมในมือ Kaster สะบัดขึ้นรับเองราวกับมีชีวิต แม่ทัพถลึงตา: "เมื่อกี้... อะไรน่ะ"</b>';
+  }
+  duel.round++;
+  document.getElementById('duelnarr').innerHTML=`<b>Kaster เลือก "${N[ps]}" · แม่ทัพเลือก "${N[es]}"</b><br>${narr}`;
+  document.getElementById('dkh').style.width=Math.max(0,duel.kh)+'%';
+  document.getElementById('dks').style.width=Math.max(0,duel.ks)+'%';
+  document.getElementById('deh').style.width=Math.max(0,(duel.eh/130)*100)+'%';
+  document.getElementById('des').style.width=Math.max(0,duel.es)+'%';
+  if(duel.eh<=0){
+    setTimeout(()=>{ getU('gen').dead=true; document.getElementById('modalhost').innerHTML=''; 
+      log('Kaster โค่นแม่ทัพ Notos กลางวงประลอง — ต่อหน้าสายตาทหารทั้งสองทัพ','gold'); checkEnd(); },900);
+    return;
+  }
+  if(duel.kh<=0){
+    setTimeout(()=>{ getU('kaster').dead=true; document.getElementById('modalhost').innerHTML=''; checkEnd(); },900);
+    return;
+  }
+  duelHint();
+}
+
+/* ============ START ============ */
+spawnAll(); render();
+showLetter('คำสั่งจากแนวหลัง — ศึกทุ่งโล่ง',
+`<p>ถึง พลทหาร Kaster แห่งกองอาสาเคราส์</p>
+<p>แม่ทัพใหญ่มีบัญชาให้กองของเจ้าเข้าตรึงแนวหน้าสุดของทุ่งโล่ง กำลังหนุนจะตามไป <i>(มันจะไม่มา — และเจ้ายังไม่รู้)</i></p>
+<p>กำลังของเจ้า: กองบัญชาการของเจ้าเอง, กองทะลวงของ Alexsen, กองธนูของ Bon shi hai และกองพันเคราส์อีกสองกอง — เผชิญทัพหลวง Notos ที่มีกำลังเหนือกว่า</p>
+<p><b>คำแนะนำของ Bon:</b> ป่าฝั่งเราคือเกราะ เนินฝั่งมันคือหอกที่เล็งมาที่เรา อย่ารบในที่ที่มันเลือก — ให้มันมารบในที่ที่เราเลือก</p>
+<p class="sig">CY1 · ปีแรกแห่งสงคราม</p>`,
+'เปิดผนึก — เริ่มศึก');
+</script>
+</body>
+</html>

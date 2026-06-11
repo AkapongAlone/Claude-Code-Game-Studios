@@ -48,7 +48,111 @@ last_updated: ""
 # Attribute fields: any key stats that could appear in another GDD
 #   (health, damage, drops, faction, etc.)
 
-entities: []
+entities:
+  - name: Kaster
+    status: active
+    source: design/gdd/officer-stats.md
+    referenced_by:
+      - design/gdd/officer-stats.md
+      - design/gdd/kasters-war-gdd.md
+    war: 82
+    ldr: 96
+    int: 92
+    pol: 85
+    chr: 88
+    signature_passive: "Read the Field + Heirloom Blade"
+    added: 2026-06-12
+    revised: ""
+
+  - name: Bon shi hai
+    status: active
+    source: design/gdd/officer-stats.md
+    referenced_by:
+      - design/gdd/officer-stats.md
+      - design/gdd/kasters-war-gdd.md
+    war: 55
+    ldr: 78
+    int: 94
+    pol: 80
+    chr: 62
+    signature_passive: "Stratagem"
+    added: 2026-06-12
+    revised: ""
+
+  - name: Alexsen
+    status: active
+    source: design/gdd/officer-stats.md
+    referenced_by:
+      - design/gdd/officer-stats.md
+      - design/gdd/kasters-war-gdd.md
+    war: 98
+    ldr: 85
+    int: 40
+    pol: 25
+    chr: 75
+    signature_passive: "Juggernaut"
+    added: 2026-06-12
+    revised: ""
+
+  - name: Thane
+    status: active
+    source: design/gdd/officer-stats.md
+    referenced_by:
+      - design/gdd/officer-stats.md
+      - design/gdd/kasters-war-gdd.md
+    war: 90
+    ldr: 50
+    int: 75
+    pol: 30
+    chr: 45
+    signature_passive: "Shadow Work + Vital Strike"
+    added: 2026-06-12
+    revised: ""
+
+  - name: Zhuge Jian
+    status: active
+    source: design/gdd/officer-stats.md
+    referenced_by:
+      - design/gdd/officer-stats.md
+      - design/gdd/kasters-war-gdd.md
+    war: 30
+    ldr: 70
+    int: 99
+    pol: 90
+    chr: 80
+    signature_passive: "The Treatises"
+    added: 2026-06-12
+    revised: ""
+
+  - name: Jin Tao
+    status: active
+    source: design/gdd/officer-stats.md
+    referenced_by:
+      - design/gdd/officer-stats.md
+      - design/gdd/kasters-war-gdd.md
+    war: 45
+    ldr: 60
+    int: 88
+    pol: 95
+    chr: 50
+    signature_passive: "Quartermaster"
+    added: 2026-06-12
+    revised: ""
+
+  - name: Sander
+    status: active
+    source: design/gdd/officer-stats.md
+    referenced_by:
+      - design/gdd/officer-stats.md
+      - design/gdd/kasters-war-gdd.md
+    war: 75
+    ldr: 88
+    int: 65
+    pol: 55
+    chr: 70
+    signature_passive: "Old Guard"
+    added: 2026-06-12
+    revised: ""
 
 # Example (remove when first real entry is added):
 #
@@ -139,7 +243,113 @@ formulas: []
 #
 # Required fields: name, status, source, referenced_by, value, unit, added
 
-constants: []
+constants:
+  - name: terrain_movement_cost_road
+    status: active
+    source: design/gdd/terrain-system.md
+    referenced_by:
+      - design/gdd/terrain-system.md
+      - design/gdd/hex-movement.md
+    value: 1
+    unit: action_points
+    added: 2026-06-12
+    revised: ""
+
+  - name: terrain_movement_cost_forest
+    status: active
+    source: design/gdd/terrain-system.md
+    referenced_by:
+      - design/gdd/terrain-system.md
+      - design/gdd/hex-movement.md
+    value: 2
+    unit: action_points
+    added: 2026-06-12
+    revised: ""
+
+  - name: terrain_movement_cost_hill
+    status: active
+    source: design/gdd/terrain-system.md
+    referenced_by:
+      - design/gdd/terrain-system.md
+      - design/gdd/hex-movement.md
+    value: 2
+    unit: action_points
+    added: 2026-06-12
+    revised: ""
+
+  - name: wet_season_multiplier
+    status: active
+    source: design/gdd/terrain-system.md
+    referenced_by:
+      - design/gdd/terrain-system.md
+    value: 1.5
+    unit: multiplier
+    added: 2026-06-12
+    revised: ""
+
+  - name: ranged_damage_hill_bonus
+    status: active
+    source: design/gdd/terrain-system.md
+    referenced_by:
+      - design/gdd/terrain-system.md
+      - design/gdd/combat-resolution.md
+    value: 0.25
+    unit: multiplier
+    added: 2026-06-12
+    revised: ""
+
+  - name: ranged_damage_forest_penalty
+    status: active
+    source: design/gdd/terrain-system.md
+    referenced_by:
+      - design/gdd/terrain-system.md
+      - design/gdd/combat-resolution.md
+    value: -0.25
+    unit: multiplier
+    added: 2026-06-12
+    revised: ""
+
+  - name: ranged_war_scaling
+    status: active
+    source: design/gdd/combat-resolution.md
+    referenced_by:
+      - design/gdd/combat-resolution.md
+    value: 0.01
+    unit: war_per_damage_point
+    added: 2026-06-12
+    revised: ""
+
+  - name: melee_war_scaling
+    status: active
+    source: design/gdd/combat-resolution.md
+    referenced_by:
+      - design/gdd/combat-resolution.md
+    value: 0.005
+    unit: war_per_damage_point
+    added: 2026-06-12
+    revised: ""
+
+  - name: flank_bonus
+    status: active
+    source: design/gdd/combat-resolution.md
+    referenced_by:
+      - design/gdd/combat-resolution.md
+      - design/gdd/facing-and-flank.md
+    value: 0.3
+    unit: multiplier
+    added: 2026-06-12
+    revised: ""
+
+  - name: morale_broken_damage_penalty
+    status: active
+    source: design/gdd/combat-resolution.md
+    referenced_by:
+      - design/gdd/combat-resolution.md
+      - design/gdd/morale-system.md
+    value: -0.5
+    unit: multiplier
+    added: 2026-06-12
+    revised: ""
 
 # Example:
 #
