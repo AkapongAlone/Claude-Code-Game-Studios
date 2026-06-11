@@ -1,0 +1,117 @@
+{
+	"_source": "design/gdd/terrain-system.md",
+	"_notes": [
+		"wet_affected: GDD terrain table marks Road and Village as 'No change' in seasons,",
+		"so the Wet x1.5 multiplier applies only to types with wet_affected=true.",
+		"Movement cost is ceil(base_cost * multiplier): Ford 2->3 AP, Bridge 1->2 AP in Wet (per GDD river rules).",
+		"attacker_ranged_mod applies when attacking FROM this terrain (Hill +25%).",
+		"defender_ranged_mod applies when the TARGET stands on this terrain (Forest -25%, Village -15%, Bridge/Ford cover equivalent to Village).",
+		"attacker_melee_mod: Hill -10% melee.",
+		"defense_mod: defender defense bonus while occupying (Village +15%, Bridge +15%).",
+		"crossing_defense_mod: penalty while mid-crossing a Ford (-20%)."
+	],
+	"season_multipliers": { "dry": 1.0, "wet": 1.5, "harvest": 1.0 },
+	"terrain_types": {
+		"road": {
+			"base_cost": 1,
+			"passable": true,
+			"wet_affected": false,
+			"attacker_ranged_mod": 0.0,
+			"defender_ranged_mod": 0.0,
+			"attacker_melee_mod": 0.0,
+			"defense_mod": 0.0,
+			"crossing_defense_mod": 0.0,
+			"vision_mod": 0,
+			"flammable_seasons": []
+		},
+		"open_field": {
+			"base_cost": 1,
+			"passable": true,
+			"wet_affected": true,
+			"attacker_ranged_mod": 0.0,
+			"defender_ranged_mod": 0.0,
+			"attacker_melee_mod": 0.0,
+			"defense_mod": 0.0,
+			"crossing_defense_mod": 0.0,
+			"vision_mod": 0,
+			"flammable_seasons": ["dry"]
+		},
+		"hill": {
+			"base_cost": 2,
+			"passable": true,
+			"wet_affected": true,
+			"attacker_ranged_mod": 0.25,
+			"defender_ranged_mod": 0.0,
+			"attacker_melee_mod": -0.10,
+			"defense_mod": 0.0,
+			"crossing_defense_mod": 0.0,
+			"vision_mod": 1,
+			"flammable_seasons": []
+		},
+		"forest": {
+			"base_cost": 2,
+			"passable": true,
+			"wet_affected": true,
+			"attacker_ranged_mod": 0.0,
+			"defender_ranged_mod": -0.25,
+			"attacker_melee_mod": 0.0,
+			"defense_mod": 0.0,
+			"crossing_defense_mod": 0.0,
+			"vision_mod": 0,
+			"flammable_seasons": [],
+			"ambush_flank_bonus": 0.30
+		},
+		"village": {
+			"base_cost": 1,
+			"passable": true,
+			"wet_affected": false,
+			"attacker_ranged_mod": 0.0,
+			"defender_ranged_mod": -0.15,
+			"attacker_melee_mod": 0.0,
+			"defense_mod": 0.15,
+			"crossing_defense_mod": 0.0,
+			"vision_mod": 0,
+			"flammable_seasons": []
+		},
+		"river": {
+			"base_cost": 0,
+			"passable": false,
+			"wet_affected": false,
+			"attacker_ranged_mod": 0.0,
+			"defender_ranged_mod": 0.0,
+			"attacker_melee_mod": 0.0,
+			"defense_mod": 0.0,
+			"crossing_defense_mod": 0.0,
+			"vision_mod": 0,
+			"flammable_seasons": []
+		},
+		"ford": {
+			"base_cost": 2,
+			"passable": true,
+			"wet_affected": true,
+			"attacker_ranged_mod": 0.0,
+			"defender_ranged_mod": -0.15,
+			"attacker_melee_mod": 0.0,
+			"defense_mod": 0.0,
+			"crossing_defense_mod": -0.20,
+			"vision_mod": 0,
+			"flammable_seasons": []
+		},
+		"bridge": {
+			"base_cost": 1,
+			"passable": true,
+			"wet_affected": true,
+			"attacker_ranged_mod": 0.0,
+			"defender_ranged_mod": -0.15,
+			"attacker_melee_mod": 0.0,
+			"defense_mod": 0.15,
+			"crossing_defense_mod": 0.0,
+			"vision_mod": 0,
+			"flammable_seasons": []
+		}
+	},
+	"fire": {
+		"spread_rate_hex_per_turn": 1,
+		"fire_damage_pct_of_current_hp": 0.20
+	}
+}

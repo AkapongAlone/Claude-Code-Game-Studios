@@ -1,0 +1,24 @@
+{
+	"_source": "design/gdd/combat-resolution.md + design/registry/entities.yaml",
+	"_notes": [
+		"ranged_war_divisor/melee_war_divisor: base = unit_base * (1 + WAR / divisor).",
+		"damage_cap: GDD Formula 3 clamps final damage_dealt to 90 max.",
+		"defense_cap: max 90% damage reduction.",
+		"ldr_defense_scale: base_defense = LDR * 0.5.",
+		"broken_morale_damage_mod: attacker with broken morale deals 50% damage.",
+		"max_hp values are placeholders until a Squad/Unit GDD specifies HP pools."
+	],
+	"ranged_war_divisor": 100,
+	"melee_war_divisor": 200,
+	"flank_bonus": 0.30,
+	"broken_morale_damage_mod": 0.5,
+	"defense_cap": 0.90,
+	"ldr_defense_scale": 0.5,
+	"damage_cap": 90.0,
+	"unit_types": {
+		"archer": { "attack": "ranged", "unit_base": 20, "max_hp": 100 },
+		"musketeer": { "attack": "ranged", "unit_base": 35, "max_hp": 100 },
+		"swordsman": { "attack": "melee", "unit_base": 40, "max_hp": 120 },
+		"spearman": { "attack": "melee", "unit_base": 35, "max_hp": 120 }
+	}
+}

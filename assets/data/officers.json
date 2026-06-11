@@ -1,0 +1,73 @@
+{
+	"_source": "design/gdd/officer-stats.md + design/registry/entities.yaml",
+	"stat_min": 1,
+	"stat_max": 100,
+	"growth_min": 1,
+	"growth_max": 3,
+	"named_officers": [
+		{
+			"id": "kaster",
+			"name": "Kaster",
+			"war": 82, "ldr": 96, "int": 92, "pol": 85, "chr": 88,
+			"signature_passive": "Read the Field + Heirloom Blade"
+		},
+		{
+			"id": "bon_shi_hai",
+			"name": "Bon shi hai",
+			"war": 55, "ldr": 78, "int": 94, "pol": 80, "chr": 62,
+			"signature_passive": "Stratagem"
+		},
+		{
+			"id": "alexsen",
+			"name": "Alexsen",
+			"war": 98, "ldr": 85, "int": 40, "pol": 25, "chr": 75,
+			"signature_passive": "Juggernaut"
+		},
+		{
+			"id": "thane",
+			"name": "Thane",
+			"war": 90, "ldr": 50, "int": 75, "pol": 30, "chr": 45,
+			"signature_passive": "Shadow Work + Vital Strike"
+		},
+		{
+			"id": "zhuge_jian",
+			"name": "Zhuge Jian",
+			"war": 30, "ldr": 70, "int": 99, "pol": 90, "chr": 80,
+			"signature_passive": "The Treatises"
+		},
+		{
+			"id": "jin_tao",
+			"name": "Jin Tao",
+			"war": 45, "ldr": 60, "int": 88, "pol": 95, "chr": 50,
+			"signature_passive": "Quartermaster"
+		},
+		{
+			"id": "sander",
+			"name": "Sander",
+			"war": 75, "ldr": 88, "int": 65, "pol": 55, "chr": 70,
+			"signature_passive": "Old Guard"
+		}
+	],
+	"archetypes": {
+		"warrior": {
+			"name": "Warrior",
+			"variance": 3,
+			"stats": { "war": 78, "ldr": 60, "int": 35, "pol": 40, "chr": 55 }
+		},
+		"scout": {
+			"name": "Scout",
+			"variance": 2,
+			"stats": { "war": 62, "ldr": 55, "int": 70, "pol": 45, "chr": 60 }
+		},
+		"scholar": {
+			"name": "Scholar",
+			"variance": 2,
+			"stats": { "war": 25, "ldr": 65, "int": 85, "pol": 75, "chr": 70 }
+		},
+		"administrator": {
+			"name": "Administrator",
+			"variance": 1,
+			"stats": { "war": 35, "ldr": 72, "int": 75, "pol": 90, "chr": 60 }
+		}
+	}
+}

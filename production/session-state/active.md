@@ -1,8 +1,8 @@
 # Session State — Kaster's War
 
 **Last updated**: 2026-06-12
-**Current task**: Combat Resolution System GDD — complete
-**Stage**: Systems Design (GDD Authoring — 3/35 systems)
+**Current task**: Godot 4.6 implementation of the 3 designed systems — complete, all tests passing
+**Stage**: Systems Design (3/35 GDDs) + Early Implementation (3 systems coded & tested)
 
 ---
 
@@ -10,35 +10,70 @@
 
 - [x] Art Bible complete — `design/art/art-bible.md` (9/9 sections)
 - [x] Engine configured — Godot 4.6, GDScript, Forward+, Jolt
-- [x] Technical preferences set — `docs/technical-preferences.md`
 - [x] Systems index created — `design/gdd/systems-index.md` (35 systems)
-- [x] Officer Stats System GDD complete — `design/gdd/officer-stats.md` (8/8 sections)
-- [x] Terrain System GDD complete — `design/gdd/terrain-system.md` (8/8 sections)
-- [x] Combat Resolution System GDD complete — `design/gdd/combat-resolution.md` (8/8 sections)
+- [x] Officer Stats GDD complete — `design/gdd/officer-stats.md`
+- [x] Terrain GDD complete — `design/gdd/terrain-system.md`
+- [x] Combat Resolution GDD complete — `design/gdd/combat-resolution.md`
+- [x] **Godot project scaffolded** — `project.godot` (Godot 4.6, Forward+, Jolt)
+- [x] **Officer Stats implemented** — `src/gameplay/officers/` (officer.gd, officer_registry.gd)
+- [x] **Terrain implemented** — `src/gameplay/terrain/` (terrain_system.gd, terrain_tile.gd)
+- [x] **Combat Resolution implemented** — `src/gameplay/combat/` (squad.gd, combat_resolver.gd)
+- [x] **Headless test suite** — 61/61 passing (Godot 4.6.3, exit code 0)
 
 ---
 
-## Systems Index Summary
+## How to Run Tests
 
-**35 systems total:**
-- 14 MVP (Vertical Slice) — M0: Open Field battle + Duel
-  - 3/14 designed: Officer Stats ✅, Terrain ✅, Combat Resolution ✅
-- 3 Alpha — M1: Tactical Complete (0/3 designed)
-- 12 Campaign — M2: Campaign Loop (0/12 designed)
-- 6 Full Vision — M3–M4: Polish (0/6 designed)
+```bash
+# One-time after clone (builds global class cache):
+"/Users/ek/Downloads/Godot.app/Contents/MacOS/Godot" --headless --path . --import
 
-**Next system to design**: Morale System (design order #4) — Tactical Core layer, depends on Combat Resolution
+# Run the suite (exit 0 = pass, 1 = fail):
+"/Users/ek/Downloads/Godot.app/Contents/MacOS/Godot" --headless --path . --script tests/headless_runner.gd
+```
+
+Test runner is addon-free (`tests/headless_runner.gd` + `tests/helpers/test_case.gd`).
+Technical preferences name GUT as the framework — migration is possible later;
+test files follow `[system]_[feature]_test.gd` / `test_[scenario]_[expected]` naming.
 
 ---
 
-## Files Modified This Session
+## Files Created This Session
 
-- `design/art/art-bible.md` — Sections 7, 8, 9 written and complete
-- `assets/art/characters/README.md` — Image spec filled from art bible
-- `design/gdd/systems-index.md` — Created (this session)
-- `.claude/docs/technical-preferences.md` — Fully populated (previous session)
-- `CLAUDE.md` — Engine stack updated (previous session)
-- `design/gdd/kasters-war-gdd.md` — Renamed from soliterra-gdd.md; character profiles added (previous session)
+- `project.godot` — Godot 4.6 project (Forward+, Jolt)
+- `assets/data/officers.json` — 7 named officers + 4 archetypes (data-driven)
+- `assets/data/terrain.json` — 8 terrain types, season multipliers, combat mods
+- `assets/data/combat.json` — combat constants + unit types (max_hp = placeholder)
+- `src/core/config_loader.gd` — JSON config loader (DI-friendly)
+- `src/gameplay/officers/officer.gd` — 5-stat block, read-only contract, clamping
+- `src/gameplay/officers/officer_registry.gd` — init, generic recruits, act growth, battle deferral
+- `src/gameplay/terrain/terrain_system.gd` — movement cost, combat mods, flammability, vision
+- `src/gameplay/terrain/terrain_tile.gd` — per-hex state (charred, ford crossing)
+- `src/gameplay/combat/squad.gd` — HP pool, unit type, morale placeholder
+- `src/gameplay/combat/combat_resolver.gd` — deterministic 4-formula damage pipeline
+- `tests/headless_runner.gd`, `tests/helpers/test_case.gd`, `tests/helpers/fixtures.gd`
+- `tests/unit/officers/` (3 files), `tests/unit/terrain/` (2 files), `tests/unit/combat/` (2 files)
+
+**Not committed** — awaiting user instruction per collaboration protocol.
+
+---
+
+## Implementation Notes / Deviations
+
+1. **GDD interface `officer.int()`** → implemented as `officer.intel()` (`int` is reserved in GDScript). Documented in doc comment.
+2. **Wet ×1.5 movement multiplier** applies only to types the GDD table marks seasonal (Road/Village = "No change"); cost = `ceil(base × mult)` → Ford 3 AP / Bridge 2 AP in Wet, matching GDD river rules.
+3. **Ranged terrain mods stack additively** (attacker hill +0.25, defender cover −0.25/−0.15) staying in the GDD's [0.75, 1.25] range. Hill-vs-village = 1.10.
+4. **Squad max_hp values are placeholders** (no Squad/Unit GDD yet) — flagged in combat.json.
+5. **Morale is a 2-state placeholder enum** (NORMAL/BROKEN) until Morale System GDD (design #4).
+6. Range/line-of-sight validation deferred to Hex Movement & Facing/Flank systems (design #5–6).
+
+---
+
+## Known Gaps (process)
+
+- No ADRs yet for the 3 implemented systems (coding standards require ADRs in `docs/architecture/`) — `/architecture-decision` or `/create-architecture` pending
+- No CI workflow (`.github/workflows/`) — `/test-setup` can scaffold
+- GUT framework named in technical-preferences; current runner is custom/addon-free
 
 ---
 
@@ -54,4 +89,6 @@
 
 ## Next Steps
 
-Run `/design-system officer-stats` to begin the first GDD.
+1. Design Morale System (design order #4): `/design-system morale-system` — combat already exposes the seam (`Squad.MoraleState`, `morale_mod`)
+2. Backfill ADRs for the 3 implemented systems
+3. Continue MVP GDDs: Facing & Flank, Hex Movement, Fog of War…

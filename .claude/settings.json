@@ -12,7 +12,13 @@
       "Bash(python -m json.tool*)",
       "Bash(python -m pytest*)",
       "Bash(py -m pytest*)",
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "Read(//Applications/**)",
+      "Bash(mdfind \"kMDItemKind == 'Application'\")",
+      "Bash(\"/Users/ek/Downloads/Godot.app/Contents/MacOS/Godot\" --version)",
+      "Bash(\"/Users/ek/Downloads/Godot.app/Contents/MacOS/Godot\" --headless --path . --import)",
+      "Bash(\"/Users/ek/Downloads/Godot.app/Contents/MacOS/Godot\" --headless --path . --script tests/headless_runner.gd)",
+      "Bash(echo \"EXIT_CODE=$?\")"
     ],
     "deny": [
       "Bash(rm -rf *)",
