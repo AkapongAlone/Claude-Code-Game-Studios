@@ -1,0 +1,47 @@
+{
+	"_source": "design/gdd/victory-defeat-conditions.md (BattleDefinition format)",
+	"_map_legend": ". open_field | r road | h hill | f forest | v village | ~ river | o ford | b bridge",
+	"battle_id": "open_field_demo",
+	"display_name": "The Open Field — Demo Battle",
+	"season": "dry",
+	"max_turns": 20,
+	"map_rows": [
+		"...h...~.....",
+		"....h..~.....",
+		"rrrrrrrorrrrr",
+		"....ff.~...h.",
+		"...fff.~..v..",
+		"....f..~.....",
+		"rrrrrrrbrrrrr",
+		"......h~.....",
+		".......~....."
+	],
+	"victory_conditions": [
+		{ "type": "ROUTE_ENEMY", "threshold": 0.50 }
+	],
+	"defeat_conditions": [
+		{ "type": "PLAYER_ROUTED", "threshold": 0.50 },
+		{ "type": "LOSE_VIP", "vip_officer_id": "kaster" },
+		{ "type": "EXCEED_TURN_LIMIT", "max_turns": 20 }
+	],
+	"victory_mode": "any",
+	"player_squads": [
+		{ "id": "p_kaster", "unit_type": "swordsman", "officer": "kaster", "col": 1, "row": 4 },
+		{ "id": "p_alexsen", "unit_type": "lancer", "officer": "alexsen", "col": 1, "row": 2 },
+		{ "id": "p_thane", "unit_type": "swordsman", "officer": "thane", "col": 2, "row": 5 },
+		{ "id": "p_bon", "unit_type": "musketeer", "officer": "bon_shi_hai", "col": 1, "row": 3 },
+		{ "id": "p_sander", "unit_type": "spearman", "officer": "sander", "col": 1, "row": 5 }
+	],
+	"enemy_officers": [
+		{ "id": "lycurse", "name": "Lycurse", "war": 92, "ldr": 80, "int": 70, "pol": 50, "chr": 65 },
+		{ "id": "voss", "name": "Captain Voss", "war": 70, "ldr": 60, "int": 50, "pol": 40, "chr": 55 },
+		{ "id": "mira", "name": "Captain Mira", "war": 60, "ldr": 55, "int": 65, "pol": 45, "chr": 60 }
+	],
+	"enemy_squads": [
+		{ "id": "e_lycurse", "unit_type": "lancer", "officer": "lycurse", "col": 11, "row": 4 },
+		{ "id": "e_voss", "unit_type": "swordsman", "officer": "voss", "col": 11, "row": 3 },
+		{ "id": "e_mira", "unit_type": "archer", "officer": "mira", "col": 10, "row": 2 },
+		{ "id": "e_archers", "unit_type": "archer", "officer": null, "col": 11, "row": 5 },
+		{ "id": "e_spears", "unit_type": "spearman", "officer": null, "col": 10, "row": 6 }
+	]
+}

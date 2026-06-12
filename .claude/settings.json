@@ -18,7 +18,12 @@
       "Bash(\"/Users/ek/Downloads/Godot.app/Contents/MacOS/Godot\" --version)",
       "Bash(\"/Users/ek/Downloads/Godot.app/Contents/MacOS/Godot\" --headless --path . --import)",
       "Bash(\"/Users/ek/Downloads/Godot.app/Contents/MacOS/Godot\" --headless --path . --script tests/headless_runner.gd)",
-      "Bash(echo \"EXIT_CODE=$?\")"
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(echo \"---import done \\(exit $?\\)---\")",
+      "Bash(\"/Users/ek/Downloads/Godot.app/Contents/MacOS/Godot\" --headless --path . --check-only --script src/ui/battle/battle_scene.gd)",
+      "Bash(echo \"RUNNER_EXIT=$?\")",
+      "Bash(\"/Users/ek/Downloads/Godot.app/Contents/MacOS/Godot\" --headless --path . --quit-after 120)",
+      "Bash(echo \"GAME_BOOT_EXIT=$?\")"
     ],
     "deny": [
       "Bash(rm -rf *)",

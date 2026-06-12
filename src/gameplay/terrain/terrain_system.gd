@@ -105,6 +105,12 @@ func vision_modifier(type: TerrainType) -> int:
 	return int(_props(type).get("vision_mod", 0))
 
 
+## True if this terrain blocks line-of-sight rays (Forest, Village —
+## hex-movement.md F-6). Hill and River do NOT block.
+func is_los_blocking(type: TerrainType) -> bool:
+	return bool(_props(type).get("los_blocking", false))
+
+
 ## Forest ambush flanking bonus (+0.30 when attacking units entering the
 ## hex). 0.0 for non-forest terrain. Consumed by Facing & Flank (design #5).
 func ambush_flank_bonus(type: TerrainType) -> float:

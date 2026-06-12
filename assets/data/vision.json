@@ -1,0 +1,5 @@
+{
+	"_source": "design/gdd/fog-of-war.md",
+	"base_vision": { "INF": 2, "LI": 3, "CAV": 3, "ART": 2 },
+	"staleness_threshold": 3
+}

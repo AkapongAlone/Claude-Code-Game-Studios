@@ -1,0 +1,23 @@
+{
+	"_source": "design/gdd/morale-system.md",
+	"steady_threshold": 30,
+	"broken_threshold": 10,
+	"officer_morale_start": 100,
+	"officerless_morale_start": 70,
+	"casualty_sensitivity": 50,
+	"flank_morale_penalty": 10,
+	"officer_loss_penalty": 30,
+	"witnessing_penalty": 10,
+	"witnessing_radius": 2,
+	"aura_protection_rate": 0.25,
+	"cascade_pass_limit": 2,
+	"campaign_recovery_pct": 0.50,
+	"recovery_chr_divisor": 25,
+	"routing_timeout_turns": 3,
+	"aura_radius_brackets": [
+		{ "min_ldr": 90, "radius": 4 },
+		{ "min_ldr": 75, "radius": 3 },
+		{ "min_ldr": 50, "radius": 2 },
+		{ "min_ldr": 0, "radius": 1 }
+	]
+}

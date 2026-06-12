@@ -1,0 +1,7 @@
+{
+	"_source": "design/gdd/hex-movement.md",
+	"base_ap": { "INF": 3, "LI": 4, "CAV": 5, "ART": 2 },
+	"max_ap": { "INF": 5, "LI": 6, "CAV": 7, "ART": 4 },
+	"ldr_ap_divisor": 34,
+	"routing_timeout_turns": 3
+}

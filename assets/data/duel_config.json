@@ -1,0 +1,27 @@
+{
+	"_source": "design/gdd/duel-system.md",
+	"duel_resolve_base": 40,
+	"duel_stamina_base": 5,
+	"duel_attack_base": 5,
+	"counter_damage_ratio": 0.40,
+	"feint_break_ratio": 0.60,
+	"tie_attack_ratio": 0.50,
+	"read_accuracy": 0.70,
+	"read_turn_interval": 3,
+	"yield_threshold": 0.30,
+	"stamina_costs": { "attack": 2, "defend": 1, "feint": 1 },
+	"field_challenge_refuse_penalty": -15,
+	"field_duel_loser_morale_delta": -25,
+	"field_duel_winner_morale_delta": 15,
+	"signature_moves": {
+		"alexsen_crushing_blow": {
+			"officer_id": "alexsen",
+			"display_name": "Crushing Blow",
+			"stamina_cost": 4,
+			"uses_per_duel": 1,
+			"vs_defend_ratio": 1.0,
+			"vs_feint_ratio": 0.75,
+			"vs_attack_self_ratio": 0.75
+		}
+	}
+}

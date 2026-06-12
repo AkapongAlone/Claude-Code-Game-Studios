@@ -1,24 +1,30 @@
 {
-	"_source": "design/gdd/combat-resolution.md + design/registry/entities.yaml",
+	"_source": "design/gdd/combat-resolution.md + morale-system.md + hex-movement.md",
 	"_notes": [
 		"ranged_war_divisor/melee_war_divisor: base = unit_base * (1 + WAR / divisor).",
 		"damage_cap: GDD Formula 3 clamps final damage_dealt to 90 max.",
 		"defense_cap: max 90% damage reduction.",
-		"ldr_defense_scale: base_defense = LDR * 0.5.",
-		"broken_morale_damage_mod: attacker with broken morale deals 50% damage.",
+		"morale_damage_mods: STEADY 1.0 / SHAKEN 0.75 / BROKEN 0.5 (morale-system.md).",
+		"ford_crossing_defense_mod: -20% defense while crossed_ford_this_turn.",
+		"range_min/range_max in hexes; ranged cannot strike adjacent (min 2).",
+		"unit_class feeds AP pool (movement.json) and base vision (vision.json).",
 		"max_hp values are placeholders until a Squad/Unit GDD specifies HP pools."
 	],
 	"ranged_war_divisor": 100,
 	"melee_war_divisor": 200,
 	"flank_bonus": 0.30,
+	"morale_damage_mods": { "steady": 1.0, "shaken": 0.75, "broken": 0.5 },
 	"broken_morale_damage_mod": 0.5,
 	"defense_cap": 0.90,
 	"ldr_defense_scale": 0.5,
 	"damage_cap": 90.0,
+	"ford_crossing_defense_mod": -0.20,
 	"unit_types": {
-		"archer": { "attack": "ranged", "unit_base": 20, "max_hp": 100 },
-		"musketeer": { "attack": "ranged", "unit_base": 35, "max_hp": 100 },
-		"swordsman": { "attack": "melee", "unit_base": 40, "max_hp": 120 },
-		"spearman": { "attack": "melee", "unit_base": 35, "max_hp": 120 }
+		"archer": { "attack": "ranged", "unit_base": 20, "max_hp": 100, "unit_class": "LI", "range_min": 2, "range_max": 3 },
+		"musketeer": { "attack": "ranged", "unit_base": 35, "max_hp": 100, "unit_class": "LI", "range_min": 2, "range_max": 3 },
+		"cannon": { "attack": "ranged", "unit_base": 38, "max_hp": 90, "unit_class": "ART", "range_min": 2, "range_max": 4 },
+		"swordsman": { "attack": "melee", "unit_base": 40, "max_hp": 120, "unit_class": "INF", "range_min": 1, "range_max": 1 },
+		"spearman": { "attack": "melee", "unit_base": 35, "max_hp": 120, "unit_class": "INF", "range_min": 1, "range_max": 1 },
+		"lancer": { "attack": "melee", "unit_base": 38, "max_hp": 110, "unit_class": "CAV", "range_min": 1, "range_max": 1 }
 	}
 }

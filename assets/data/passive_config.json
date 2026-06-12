@@ -1,0 +1,37 @@
+{
+	"_source": "design/gdd/officer-passive-ability.md",
+	"_note": "heirloom_blade is HIDDEN — its internal ID must never appear in player-facing UI.",
+	"blade_proc_rate": 0.05,
+	"blade_max_terrain_mod": 1.25,
+	"blade_max_flank_mod": 1.3,
+	"vital_strike_morale_damage": 10,
+	"vital_strike_radius": 2,
+	"old_guard_radius": 1,
+	"stratagem_vision_bonus": 1,
+	"generic_passive_chance": 0.20,
+	"officer_passives": {
+		"kaster": [
+			{ "id": "read_the_field", "name": "Read the Field", "is_player_visible": true },
+			{ "id": "heirloom_blade", "name": "Heirloom Blade", "is_player_visible": false }
+		],
+		"alexsen": [
+			{ "id": "juggernaut", "name": "Juggernaut", "is_player_visible": true }
+		],
+		"thane": [
+			{ "id": "shadow_work", "name": "Shadow Work", "is_player_visible": true },
+			{ "id": "vital_strike", "name": "Vital Strike", "is_player_visible": true }
+		],
+		"bon_shi_hai": [
+			{ "id": "stratagem", "name": "Stratagem", "is_player_visible": true }
+		],
+		"sander": [
+			{ "id": "old_guard", "name": "Old Guard", "is_player_visible": true }
+		],
+		"zhuge_jian": [
+			{ "id": "treatises", "name": "The Treatises", "is_player_visible": true }
+		],
+		"jin_tao": [
+			{ "id": "quartermaster", "name": "Quartermaster", "is_player_visible": true }
+		]
+	}
+}

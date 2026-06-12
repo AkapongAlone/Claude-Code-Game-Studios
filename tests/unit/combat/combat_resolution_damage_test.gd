@@ -68,6 +68,18 @@ func test_invalid_flank_mod_falls_back_to_one() -> void:
 	assert_almost_eq(_resolver.total_damage(36.0, 1.0, 2.0, 1.0), 36.0, 0.0001, "flank above 1.0 + bonus is invalid")
 
 
+## Morale System cross-boundary AC: STEADY 1.0 / SHAKEN 0.75 / BROKEN 0.5.
+func test_morale_mod_three_states() -> void:
+	assert_almost_eq(_resolver.morale_mod_for(Squad.MoraleState.STEADY), 1.0)
+	assert_almost_eq(_resolver.morale_mod_for(Squad.MoraleState.SHAKEN), 0.75)
+	assert_almost_eq(_resolver.morale_mod_for(Squad.MoraleState.BROKEN), 0.5)
+
+
+## SHAKEN attacker through the damage pipeline: 36 × 0.75 = 27.
+func test_shaken_attacker_deals_75_percent() -> void:
+	assert_almost_eq(_resolver.total_damage(36.0, 1.0, 1.0, 0.75), 27.0)
+
+
 ## Determinism: identical inputs always produce identical damage (no RNG).
 func test_damage_calculation_deterministic() -> void:
 	var first := _resolver.total_damage(_resolver.base_damage_ranged(20, 80), 1.25, 1.3, 1.0)
