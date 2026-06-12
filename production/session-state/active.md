@@ -1,8 +1,8 @@
 # Session State — Kaster's War
 
 **Last updated**: 2026-06-12
-**Current task**: Godot 4.6 implementation of the 3 designed systems — complete, all tests passing
-**Stage**: Systems Design (3/35 GDDs) + Early Implementation (3 systems coded & tested)
+**Current task**: Save/Load GDD complete — all 14 MVP GDDs designed ✅
+**Stage**: Systems Design (14/35 GDDs designed, 3 approved) + Early Implementation (3 systems coded & tested)
 
 ---
 
@@ -89,6 +89,59 @@ test files follow `[system]_[feature]_test.gd` / `test_[scenario]_[expected]` na
 
 ## Next Steps
 
-1. Design Morale System (design order #4): `/design-system morale-system` — combat already exposes the seam (`Squad.MoraleState`, `morale_mod`)
-2. Backfill ADRs for the 3 implemented systems
-3. Continue MVP GDDs: Facing & Flank, Hex Movement, Fog of War…
+1. ~~Design Morale System (design order #4)~~ ✅ DONE — `design/gdd/morale-system.md`
+   - Requires: update `combat_resolver.gd` to add SHAKEN (morale_mod = 0.75)
+   - Requires: expand `MoraleState` enum in `squad.gd` (STEADY/SHAKEN/BROKEN)
+2. ~~Design Facing & Flank System (design order #5)~~ ✅ DONE — `design/gdd/facing-and-flank.md`
+3. ~~Design Hex Movement System (design order #6)~~ ✅ DONE — `design/gdd/hex-movement.md`
+4. ~~Design Fog of War / Vision System (design order #7)~~ ✅ DONE — `design/gdd/fog-of-war.md`
+5. ~~Design Victory/Defeat Conditions System (design order #8)~~ ✅ DONE — `design/gdd/victory-defeat-conditions.md`
+6. ~~Design Duel System (design order #9, ⚠️ HIGH RISK)~~ ✅ DONE — `design/gdd/duel-system.md`
+7. ~~Design Officer Passive Ability System (design order #10, ⚠️ HIGH RISK)~~ ✅ DONE — `design/gdd/officer-passive-ability.md`
+8. ~~Design Duel UI (design order #12)~~ ✅ DONE — `design/gdd/duel-ui.md`
+9. ~~Design Portrait & Character Display System (design order #13)~~ ✅ DONE — `design/gdd/portrait-display.md`
+10. ~~Design Tactical HUD (design order #11)~~ ✅ DONE — `design/gdd/tactical-hud.md`
+11. ~~Design Save/Load System (design order #14)~~ ✅ DONE — `design/gdd/save-load.md`
+    - 2 save scopes: Campaign (3 manual + 1 auto) and Tactical (1 slot, turn-start auto)
+    - Modular manifest contract: each system implements serialize()/deserialize()
+    - Provisional: campaign layer state (Resource, Settlement, Intel, etc. not yet designed)
+    - Mid-duel save blocked; tactical save only in MOVEMENT/COMBAT phase
+    - 4 formulas: checksum, migration rule, file path, playtime accumulator
+    - 14 edge cases; 21 acceptance criteria
+    - Resolves Hex Movement GDD open question #1: flat-top hex orientation
+    - Resolves Fog of War GDD open question #3: partial visibility during AI turn only
+    - CanvasLayer: TacticalHUDLayer = 5; Duel UI = 10; battle-end = 15; pause/menu = 20
+    - Registry updated: staleness_threshold + route_fraction referenced_by
+   - Three rendering tiers: Full Panel / Compact Bar / Miniature Icon
+   - Four display contexts: CAMPAIGN / TACTICAL / DIPLOMATIC / RECRUITMENT
+   - Heirloom Blade constraint enforced upstream in get_display_passives() — renderer is unaware
+   - 4 display formulas: stat_bar_fill, stat_bar_color, growth_visible, thumbnail_crop
+   - 14 edge cases; 29 acceptance criteria
+   - Campaign State interface provisional (unavailable_turns, current_assignment)
+   - Registry: no new entries; all 7 named officers already registered
+   - 6 display formulas: resolve_fill_fraction, stamina pips, yield_button_visible, stance_available, bar_color_zone, damage_label
+   - 44 acceptance criteria
+   - Full component inventory: DuelOverlayLayer → DuelFrame → Opponent/PlayerPanel → ActionBar → YieldButton
+   - 6-phase screen lifecycle: INIT → SELECTING → RESOLVING → READ_HINT → YIELD_AVAILABLE → END
+   - Push-driven interface: Duel System calls DuelUI methods; UI never polls
+   - Open questions: private stance commit visibility, scripted deliberation time, flavor text authorship, sig move tooltip, Mission 6 resolve color subversion
+   - Registry updated: 5 formula/constant referenced_by entries updated (duel_resolve, duel_stamina, duel_attack_damage, duel_read_accuracy, duel_yield_threshold)
+   - 9 named passives (Kaster×2, Alexsen, Thane×2, Zhuge Jian, Jin Tao, Bon, Sander)
+   - Heirloom Blade: hidden passive, 5% proc, NO UI disclosure (P3 ambiguity)
+   - Systems designer corrections: F-1 use bracket table (Kaster=4hex); F-3 proc 3%→5%; F-4 Vital Strike −15→−10, process through cascade
+   - 44 acceptance criteria (QA Lead reviewed)
+   - Registry updated: 5 new constants
+   - Formulas: duel_resolve = floor(CHR/2)+40, duel_stamina = floor(INT/10)+5, attack_damage = floor(WAR/10)+5
+   - Systems designer correction: offset raised +30→+40 (Thane fragility fix)
+   - 3-way RPS, Stamina budget, Read mechanic (WAR-based, 70%), Signature Move hook interface
+   - 3 contexts: field challenge / scripted (with intentional_miss) / diplomatic
+   - 40 acceptance criteria (QA Lead reviewed)
+   - Entity registry updated: 3 formulas + 5 constants
+7. Run `/design-review design/gdd/morale-system.md` in a fresh session (independent review)
+6. Run `/design-review design/gdd/facing-and-flank.md` in a fresh session (independent review)
+7. Run `/design-review design/gdd/hex-movement.md` in a fresh session (independent review)
+8. Run `/design-review design/gdd/fog-of-war.md` in a fresh session (independent review)
+9. Backfill ADRs for the 3 implemented systems
+10. Continue MVP GDDs: Officer Passive Ability System (#10, ⚠️ HIGH RISK — 7 named passives, Heirloom Blade edge case)…
+    NOTE: Terrain GDD Dependencies section needs backfill — add Hex Movement and Fog of War as downstream consumers
+    NOTE: Duel System GDD open question #1 (simultaneous tie scripted fallback) needs narrative director input before Duel System impl.

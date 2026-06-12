@@ -210,7 +210,132 @@ items: []
 #   output_range[min, max], added
 # Optional: expression (the actual formula), notes
 
-formulas: []
+formulas:
+  - name: vision_range
+    status: active
+    source: design/gdd/fog-of-war.md
+    referenced_by:
+      - design/gdd/fog-of-war.md
+    variables:
+      - unit_type
+      - terrain_hex
+      - squad_vision_bonus
+    output_range: [2, 5]
+    expression: "base_vision[unit_type] + terrain.vision_modifier(hex) + squad.vision_bonus"
+    notes: "base_vision: INF=2, LI=3, CAV=3, ART=2. Hill grants +1 via terrain.vision_modifier.
+      squad.vision_bonus is summed from passive effects (Bon Stratagem: +1 all squads).
+      Tactical AI GDD will reference this formula for enemy behavior planning."
+    added: 2026-06-12
+    revised: ""
+
+  - name: ap_pool
+    status: active
+    source: design/gdd/hex-movement.md
+    referenced_by:
+      - design/gdd/hex-movement.md
+      - design/gdd/morale-system.md
+    variables:
+      - unit_type
+      - ldr
+    output_range: [2, 7]
+    expression: "min(base_ap[unit_type] + floor((ldr - 1) / 34), max_ap[unit_type])"
+    notes: "base_ap: INF=3, LI=4, CAV=5, ART=2. max_ap: INF=5, LI=6, CAV=7, ART=4.
+      ldr_ap_divisor=34 yields breakpoints LDR 1-34:+0, 35-67:+1, 68-100:+2.
+      Morale System reads ap_pool as the routing movement budget for BROKEN squads.
+      Tactical AI reads reachable_hexes(squad) which depends on ap_pool."
+    added: 2026-06-12
+    revised: ""
+
+  - name: route_fraction
+    status: active
+    source: design/gdd/victory-defeat-conditions.md
+    referenced_by:
+      - design/gdd/victory-defeat-conditions.md
+      - design/gdd/tactical-hud.md
+    variables:
+      - broken_on_map
+      - routed_off_map
+      - dead_squads
+      - starting_squads
+    output_range: [0.0, 1.0]
+    expression: "(broken_on_map + routed_off_map + dead_squads) / starting_squads"
+    notes: "broken_on_map = squads with morale_state==BROKEN still on map.
+      routed_off_map = squads that exited via routing. dead_squads = squads removed at HP=0.
+      starting_squads is fixed at battle start (denominator never changes).
+      Tactical AI GDD and Tactical HUD GDD will reference this formula."
+    added: 2026-06-12
+    revised: ""
+
+  - name: duel_resolve
+    status: active
+    source: design/gdd/duel-system.md
+    referenced_by:
+      - design/gdd/duel-system.md
+      - design/gdd/duel-ui.md
+    variables:
+      - chr
+    output_range: [40, 90]
+    expression: "floor(CHR / 2) + 40"
+    notes: "Officer's HP pool inside a duel. Derived once at duel start from permanent CHR stat.
+      Named values: Kaster=84, Alexsen=77, Thane=62, Sander=75, Bon=71, Jin Tao=65, Zhuge Jian=80.
+      Duel UI GDD and Officer Passive Ability GDD will reference this formula.
+      Offset was raised from 30 to 40 (2026-06-12) to prevent high-WAR/low-CHR officers being too fragile."
+    added: 2026-06-12
+    revised: ""
+
+  - name: duel_stamina
+    status: active
+    source: design/gdd/duel-system.md
+    referenced_by:
+      - design/gdd/duel-system.md
+      - design/gdd/duel-ui.md
+    variables:
+      - int_stat
+    output_range: [5, 15]
+    expression: "floor(INT / 10) + 5"
+    notes: "Per-duel action budget. Resets fresh each duel — not persistent across duels in same battle.
+      Named values: Zhuge Jian=14, Kaster=14, Bon=14, Thane=12, Sander=11, Alexsen=9.
+      Duel UI GDD and Officer Passive Ability GDD will reference this formula."
+    added: 2026-06-12
+    revised: ""
+
+  - name: duel_attack_damage
+    status: active
+    source: design/gdd/duel-system.md
+    referenced_by:
+      - design/gdd/duel-system.md
+      - design/gdd/duel-ui.md
+    variables:
+      - war
+    output_range: [5, 15]
+    expression: "floor(WAR / 10) + 5"
+    notes: "Damage dealt when officer wins an Attack stance match-up.
+      Named values: Alexsen=14, Thane=14, Kaster=13, Sander=12, Bon=10, Zhuge Jian=8.
+      Officer Passive Ability GDD will reference this for Crushing Blow damage calculation."
+    added: 2026-06-12
+    revised: ""
+
+  - name: is_flanking
+    status: active
+    source: design/gdd/facing-and-flank.md
+    referenced_by:
+      - design/gdd/facing-and-flank.md
+      - design/gdd/combat-resolution.md
+      - design/gdd/morale-system.md
+    variables:
+      - attacker_hex
+      - defender_id
+      - defender_facing_direction
+      - attacker_in_forest
+      - attacker_moved_this_turn
+      - target_moved_this_turn
+    output_range: [false, true]
+    expression: "(R - D + 6) mod 6 >= 3  OR  (attacker_in_forest AND NOT attacker_moved_this_turn AND target_moved_this_turn)"
+    notes: "R = cube direction index from defender to attacker. D = defender facing_direction [0-5].
+      Combat Resolution reads this as flanking_mod (1.3 if true, 1.0 if false).
+      Morale reads is_flanked_this_turn — fires morale_damage_flank = 10 once per turn if true."
+    added: 2026-06-12
+    revised: ""
 
 # Example:
 #
@@ -282,6 +407,7 @@ constants:
     source: design/gdd/terrain-system.md
     referenced_by:
       - design/gdd/terrain-system.md
+      - design/gdd/hex-movement.md
     value: 1.5
     unit: multiplier
     added: 2026-06-12
@@ -348,6 +474,266 @@ constants:
       - design/gdd/morale-system.md
     value: -0.5
     unit: multiplier
+    added: 2026-06-12
+    revised: ""
+
+  - name: morale_shaken_damage_penalty
+    status: active
+    source: design/gdd/morale-system.md
+    referenced_by:
+      - design/gdd/morale-system.md
+      - design/gdd/combat-resolution.md
+    value: -0.25
+    unit: multiplier
+    added: 2026-06-12
+    revised: ""
+
+  - name: staleness_threshold
+    status: active
+    source: design/gdd/fog-of-war.md
+    referenced_by:
+      - design/gdd/fog-of-war.md
+      - design/gdd/tactical-hud.md
+    value: 3
+    unit: turns
+    notes: "Ghost positions with staleness_turns >= this value display a '?' badge.
+      Matches Campaign Intel System's 3-turn decay period for cross-layer consistency."
+    added: 2026-06-12
+    revised: ""
+
+  - name: base_vision_li
+    status: active
+    source: design/gdd/fog-of-war.md
+    referenced_by:
+      - design/gdd/fog-of-war.md
+    value: 3
+    unit: hexes
+    notes: "LI and CAV share base_vision=3. LI=3 for skirmisher far-vision role. Also CAV=3 for scouting/screening."
+    added: 2026-06-12
+    revised: ""
+
+  - name: base_vision_inf
+    status: active
+    source: design/gdd/fog-of-war.md
+    referenced_by:
+      - design/gdd/fog-of-war.md
+    value: 2
+    unit: hexes
+    notes: "INF and ART share base_vision=2."
+    added: 2026-06-12
+    revised: ""
+
+  - name: ldr_ap_divisor
+    status: active
+    source: design/gdd/hex-movement.md
+    referenced_by:
+      - design/gdd/hex-movement.md
+    value: 34
+    unit: ldr_points_per_ap_tier
+    notes: "Divisor in ap_pool formula. floor((ldr-1)/34) yields breakpoints at LDR 35 (+1) and LDR 68 (+2).
+      Decrease to make LDR matter more for movement speed. Safe range: [25, 50]."
+    added: 2026-06-12
+    revised: ""
+
+  - name: ap_pool_max_cav
+    status: active
+    source: design/gdd/hex-movement.md
+    referenced_by:
+      - design/gdd/hex-movement.md
+    value: 7
+    unit: action_points
+    notes: "Hard cap for CAV unit type. Prevents cavalry from crossing the full tactical map in one turn."
+    added: 2026-06-12
+    revised: ""
+
+  - name: ap_pool_max_inf
+    status: active
+    source: design/gdd/hex-movement.md
+    referenced_by:
+      - design/gdd/hex-movement.md
+    value: 5
+    unit: action_points
+    added: 2026-06-12
+    revised: ""
+
+  - name: ap_pool_max_li
+    status: active
+    source: design/gdd/hex-movement.md
+    referenced_by:
+      - design/gdd/hex-movement.md
+    value: 6
+    unit: action_points
+    added: 2026-06-12
+    revised: ""
+
+  - name: ap_pool_max_art
+    status: active
+    source: design/gdd/hex-movement.md
+    referenced_by:
+      - design/gdd/hex-movement.md
+    value: 4
+    unit: action_points
+    notes: "Hard cap for ART unit type. At max 4 AP, artillery cannot enter Wet Forest/Hill (cost 3 AP each) unless starting adjacent."
+    added: 2026-06-12
+    revised: ""
+
+  - name: route_victory_threshold
+    status: active
+    source: design/gdd/victory-defeat-conditions.md
+    referenced_by:
+      - design/gdd/victory-defeat-conditions.md
+    value: 0.50
+    unit: fraction
+    notes: "Default threshold for ROUTE_ENEMY victory condition. route_fraction(enemy) >= this value triggers victory.
+      Overridable per-battle in BattleDefinition JSON. Tactical AI GDD should reference this to determine
+      when to trigger AI surrender/retreat heuristics. Safe range: [0.40, 0.80]."
+    added: 2026-06-12
+    revised: ""
+
+  - name: route_defeat_threshold
+    status: active
+    source: design/gdd/victory-defeat-conditions.md
+    referenced_by:
+      - design/gdd/victory-defeat-conditions.md
+    value: 0.50
+    unit: fraction
+    notes: "Default threshold for PLAYER_ROUTED defeat condition. route_fraction(player) >= this value triggers defeat.
+      Overridable per-battle in BattleDefinition JSON. Should typically mirror route_victory_threshold.
+      For early-game scaffolding (Acts I-II), consider 0.60 to make player harder to defeat. Safe range: [0.40, 0.80]."
+    added: 2026-06-12
+    revised: ""
+
+  - name: duel_read_accuracy
+    status: active
+    source: design/gdd/duel-system.md
+    referenced_by:
+      - design/gdd/duel-system.md
+      - design/gdd/duel-ui.md
+    value: 0.70
+    unit: probability
+    notes: "Probability that the Read hint shows the opponent's correct stance.
+      Fires on turns 3, 6, 9... for the higher-WAR participant only.
+      Safe range: [0.55, 0.85]. Below 0.55 feels random; above 0.85 feels deterministic."
+    added: 2026-06-12
+    revised: ""
+
+  - name: duel_yield_threshold
+    status: active
+    source: design/gdd/duel-system.md
+    referenced_by:
+      - design/gdd/duel-system.md
+      - design/gdd/duel-ui.md
+    value: 0.30
+    unit: fraction
+    notes: "Opponent's current Resolve must be <= this fraction of their max_resolve
+      before the Yield action becomes available to the player. Safe range: [0.20, 0.45]."
+    added: 2026-06-12
+    revised: ""
+
+  - name: duel_loser_morale_delta
+    status: active
+    source: design/gdd/duel-system.md
+    referenced_by:
+      - design/gdd/duel-system.md
+      - design/gdd/morale-system.md
+    value: -25
+    unit: morale_points
+    notes: "Morale applied to the losing officer's squad after a field duel ends.
+      Must exceed the SHAKEN→BROKEN threshold gap (20 points) to reliably route fragile squads.
+      Safe range: [-35, -15]. Morale System owns the SHAKEN/BROKEN state thresholds."
+    added: 2026-06-12
+    revised: ""
+
+  - name: duel_winner_morale_delta
+    status: active
+    source: design/gdd/duel-system.md
+    referenced_by:
+      - design/gdd/duel-system.md
+      - design/gdd/morale-system.md
+    value: 15
+    unit: morale_points
+    notes: "Morale applied to the winning officer's squad after a field duel ends.
+      Intended to reward aggressive duel play without trivially restoring a routed squad.
+      Safe range: [5, 25]."
+    added: 2026-06-12
+    revised: ""
+
+  - name: blade_proc_rate
+    status: active
+    source: design/gdd/officer-passive-ability.md
+    referenced_by:
+      - design/gdd/officer-passive-ability.md
+    value: 0.05
+    unit: probability
+    notes: "Per-attack probability that Heirloom Blade proc fires (Kaster's hidden passive).
+      At 5%: ~1 proc per 20-turn battle for one melee squad. Safe range: [0.02, 0.08].
+      Must never appear in any player-facing UI string. Internal ID 'heirloom_blade' only."
+    added: 2026-06-12
+    revised: ""
+
+  - name: vital_strike_morale_damage
+    status: active
+    source: design/gdd/officer-passive-ability.md
+    referenced_by:
+      - design/gdd/officer-passive-ability.md
+      - design/gdd/morale-system.md
+    value: -10
+    unit: morale_points
+    notes: "Morale damage applied to each enemy squad within 2 hexes of Thane's kill target.
+      Matches witnessing_penalty (10) to stay proportionally consistent with existing cascade system.
+      Processed during Morale Resolution Phase under 2-pass cascade cap — not immediate.
+      Safe range: [-5, -15]. At -15, risk of cascade-routing a full SHAKEN line in one kill."
+    added: 2026-06-12
+    revised: ""
+
+  - name: vital_strike_radius
+    status: active
+    source: design/gdd/officer-passive-ability.md
+    referenced_by:
+      - design/gdd/officer-passive-ability.md
+    value: 2
+    unit: hexes
+    notes: "Blast radius from killed squad for Vital Strike morale damage.
+      Matches witnessing-rout radius (2 hexes) from Morale System for spatial consistency."
+    added: 2026-06-12
+    revised: ""
+
+  - name: quartermaster_supply_reduction
+    status: active
+    source: design/gdd/officer-passive-ability.md
+    referenced_by:
+      - design/gdd/officer-passive-ability.md
+    value: 0.20
+    unit: fraction
+    notes: "Jin Tao's Quartermaster supply cost reduction for armies within 2 settlement-hops.
+      Placeholder value — requires Resource System GDD to formalize 'settlement-hops' definition.
+      Safe range: [0.10, 0.40]. Non-stacking; largest reduction wins when multiple apply."
+    added: 2026-06-12
+    revised: ""
+
+  - name: generic_passive_chance
+    status: active
+    source: design/gdd/officer-passive-ability.md
+    referenced_by:
+      - design/gdd/officer-passive-ability.md
+    value: 0.20
+    unit: probability
+    notes: "Probability a generic officer receives one passive from the generic pool at recruitment.
+      At 20% with 25-30 officers: ~5-6 passives expected. Safe range: [0.10, 0.35]."
+    added: 2026-06-12
+    revised: ""
+
+  - name: duel_field_refuse_penalty
+    status: active
+    source: design/gdd/duel-system.md
+    referenced_by:
+      - design/gdd/duel-system.md
+      - design/gdd/morale-system.md
+    value: -15
+    unit: morale_points
+    notes: "Morale applied to a refusing squad when the officer declines a field challenge.
+      Applied to the refusing squad immediately. Challenger's squad unaffected.
+      Safe range: [-25, -5]. More negative = dueling culture enforced; less = refusal is viable tactic."
     added: 2026-06-12
     revised: ""
 

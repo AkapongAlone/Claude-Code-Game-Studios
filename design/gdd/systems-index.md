@@ -22,16 +22,16 @@ Kaster's War is a three-layer strategy game (Campaign → Preparation Phase → 
 | 2 | Terrain System | Foundation | MVP | Approved | design/gdd/terrain-system.md | — |
 | 3 | Resource System | Foundation | Campaign | Not Started | — | — |
 | 4 | Settlement Data System | Foundation | Campaign | Not Started | — | — |
-| 5 | Hex Movement System | Tactical | MVP | Not Started | — | Terrain |
+| 5 | Hex Movement System | Tactical | MVP | Designed | design/gdd/hex-movement.md | Terrain |
 | 6 | Combat Resolution System | Tactical | MVP | Not Started | — | Officer Stats, Terrain |
-| 7 | Facing & Flank System | Tactical | MVP | Not Started | — | Terrain, Hex Movement |
-| 8 | Morale System | Tactical | MVP | Not Started | — | Officer Stats, Combat Resolution |
-| 9 | Fog of War / Vision System | Tactical | MVP | Not Started | — | Terrain, Hex Movement |
-| 10 | Victory/Defeat Conditions System | Tactical | MVP | Not Started | — | Morale, Combat Resolution |
+| 7 | Facing & Flank System | Tactical | MVP | Designed | design/gdd/facing-and-flank.md | Terrain, Hex Movement |
+| 8 | Morale System | Tactical | MVP | Designed | design/gdd/morale-system.md | Officer Stats, Combat Resolution |
+| 9 | Fog of War / Vision System | Tactical | MVP | Designed | design/gdd/fog-of-war.md | Terrain, Hex Movement |
+| 10 | Victory/Defeat Conditions System | Tactical | MVP | Designed | design/gdd/victory-defeat-conditions.md | Morale, Combat Resolution |
 | 11 | Ranged & Artillery System | Tactical | Alpha | Not Started | — | Hex Movement, Combat Resolution, Fog of War |
 | 12 | Fire System | Tactical | Alpha | Not Started | — | Terrain, Hex Movement, Campaign Map |
-| 13 | Duel System | Character | MVP | Not Started | — | Officer Stats |
-| 14 | Officer Passive Ability System | Character | MVP | Not Started | — | Officer Stats, Combat Resolution, Duel |
+| 13 | Duel System | Character | MVP | Designed | design/gdd/duel-system.md | Officer Stats |
+| 14 | Officer Passive Ability System | Character | MVP | Designed | design/gdd/officer-passive-ability.md | Officer Stats, Combat Resolution, Duel |
 | 15 | Campaign Map System | Campaign | Campaign | Not Started | — | Resource, Settlement Data, Terrain |
 | 16 | Intel System *(signature pillar)* | Campaign | Campaign | Not Started | — | Resource, Settlement Data |
 | 17 | Army Composition System | Campaign | Campaign | Not Started | — | Campaign Map, Resource, Officer Stats |
@@ -43,12 +43,12 @@ Kaster's War is a three-layer strategy game (Campaign → Preparation Phase → 
 | 23 | Tactical AI System | AI | Alpha | Not Started | — | Hex Movement, Combat Resolution, Morale, Facing & Flank |
 | 24 | Campaign AI System | AI | Campaign | Not Started | — | Campaign Map, Intel, Army Composition |
 | 25 | French Drill / Upgrade System *(inferred)* | Progression | Full Vision | Not Started | — | Army Composition, Story Events |
-| 26 | Tactical HUD | UI | MVP | Not Started | — | Combat Resolution, Morale, Officer Passive, Hex Movement |
-| 27 | Duel UI | UI | MVP | Not Started | — | Duel |
-| 28 | Portrait & Character Display System | UI | MVP | Not Started | — | Officer Stats |
+| 26 | Tactical HUD | UI | MVP | Designed | design/gdd/tactical-hud.md | Combat Resolution, Morale, Officer Passive, Hex Movement |
+| 27 | Duel UI | UI | MVP | Designed | design/gdd/duel-ui.md | Duel |
+| 28 | Portrait & Character Display System | UI | MVP | Designed | design/gdd/portrait-display.md | Officer Stats |
 | 29 | Campaign Map UI | UI | Campaign | Not Started | — | Campaign Map, Resource, Settlement Management, Intel |
 | 30 | Preparation Phase UI | UI | Campaign | Not Started | — | Preparation Phase |
-| 31 | Save/Load System *(inferred)* | Meta | MVP | Not Started | — | All gameplay systems |
+| 31 | Save/Load System *(inferred)* | Meta | MVP | Designed | design/gdd/save-load.md | All gameplay systems |
 | 32 | Difficulty Settings System *(inferred)* | Meta | Full Vision | Not Started | — | Intel, Campaign AI, Tactical AI |
 | 33 | Audio System *(inferred)* | Meta | Full Vision | Not Started | — | All gameplay systems |
 | 34 | Localization System *(inferred)* | Meta | Full Vision | Not Started | — | All UI systems |
@@ -162,17 +162,17 @@ Kaster's War is a three-layer strategy game (Campaign → Preparation Phase → 
 | 1 | Officer Stats System | MVP | Foundation | game-designer | S | ✅ DESIGNED |
 | 2 | Terrain System | MVP | Foundation | game-designer | S | ✅ DESIGNED |
 | 3 | Combat Resolution System | MVP | Tactical Core | game-designer, systems-designer | M | ✅ DESIGNED |
-| 4 | Morale System | MVP | Tactical Core | game-designer, systems-designer | M |
-| 5 | Facing & Flank System | MVP | Tactical Core | game-designer | S |
-| 6 | Hex Movement System | MVP | Tactical Core | game-designer | S |
-| 7 | Fog of War / Vision System | MVP | Tactical Core | game-designer | S |
-| 8 | Victory/Defeat Conditions System | MVP | Tactical Core | game-designer | S |
-| 9 | Duel System ⚠️ | MVP | Character Core | game-designer, systems-designer | L |
-| 10 | Officer Passive Ability System ⚠️ | MVP | Character Core | game-designer | M |
-| 11 | Tactical HUD | MVP | UI | ux-designer | M |
-| 12 | Duel UI | MVP | UI | ux-designer, art-director | S |
-| 13 | Portrait & Character Display System | MVP | UI | art-director | S |
-| 14 | Save/Load System | MVP | Meta | lead-programmer | M |
+| 4 | Morale System | MVP | Tactical Core | game-designer, systems-designer | M | ✅ DESIGNED |
+| 5 | Facing & Flank System | MVP | Tactical Core | game-designer | S | ✅ DESIGNED |
+| 6 | Hex Movement System | MVP | Tactical Core | game-designer | S | ✅ DESIGNED |
+| 7 | Fog of War / Vision System | MVP | Tactical Core | game-designer | S | ✅ DESIGNED |
+| 8 | Victory/Defeat Conditions System | MVP | Tactical Core | game-designer | S | ✅ DESIGNED |
+| 9 | Duel System ⚠️ | MVP | Character Core | game-designer, systems-designer | L | ✅ DESIGNED |
+| 10 | Officer Passive Ability System ⚠️ | MVP | Character Core | game-designer | M | ✅ DESIGNED |
+| 11 | Tactical HUD | MVP | UI | ux-designer | M | ✅ DESIGNED |
+| 12 | Duel UI | MVP | UI | ux-designer, art-director | S | ✅ DESIGNED |
+| 13 | Portrait & Character Display System | MVP | UI | art-director | S | ✅ DESIGNED |
+| 14 | Save/Load System | MVP | Meta | lead-programmer | M | ✅ DESIGNED |
 | 15 | Ranged & Artillery System | Alpha | Tactical Expanded | game-designer | M |
 | 16 | Fire System | Alpha | Tactical Expanded | game-designer, systems-designer | M |
 | 17 | Tactical AI System ⚠️ | Alpha | AI | ai-programmer, game-designer | L |
@@ -226,10 +226,10 @@ Kaster's War is a three-layer strategy game (Campaign → Preparation Phase → 
 | Metric | Count |
 |---|---|
 | Total systems identified | 35 |
-| Design docs started | 3 |
+| Design docs started | 14 |
 | Design docs reviewed | 0 |
 | Design docs approved | 3 |
-| MVP systems designed | 3 / 14 |
+| MVP systems designed | 14 / 14 |
 | Alpha systems designed | 0 / 3 |
 | Campaign systems designed | 0 / 12 |
 | Full Vision systems designed | 0 / 6 |
