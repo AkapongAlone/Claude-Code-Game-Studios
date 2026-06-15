@@ -13,6 +13,7 @@ signal restart_pressed
 
 var _turn_label: Label
 var _tracker_label: Label
+var _portrait: TextureRect
 var _inspector: Label
 var _log_label: Label
 var _duel_button: Button
@@ -62,6 +63,13 @@ func _ready() -> void:
 	inspector_title.text = "UNIT INSPECTOR"
 	layout.add_child(inspector_title)
 
+	_portrait = TextureRect.new()
+	_portrait.custom_minimum_size = Vector2(246, 120)
+	_portrait.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_portrait.visible = false
+	layout.add_child(_portrait)
+
 	_inspector = Label.new()
 	_inspector.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_inspector.custom_minimum_size = Vector2(0, 250)
@@ -99,6 +107,7 @@ func update_status(turn: int, battle_name: String, enemy_broken: int, enemy_tota
 ## Shows the selected squad in the inspector.
 func show_squad(squad: Squad) -> void:
 	_duel_button.visible = false
+	_portrait.visible = false
 	if squad == null:
 		_inspector.text = "Select a squad."
 		return
@@ -106,6 +115,11 @@ func show_squad(squad: Squad) -> void:
 	lines.append("%s  [%s]" % [squad.id, squad.unit_type_id])
 	if squad.officer != null:
 		var officer := squad.officer
+		if not officer.portrait_path.is_empty():
+			var tex: Texture2D = load(officer.portrait_path)
+			if tex != null:
+				_portrait.texture = tex
+				_portrait.visible = true
 		lines.append("Officer: %s" % officer.display_name)
 		lines.append("WAR %d  LDR %d  INT %d" % [officer.war(), officer.ldr(), officer.intel()])
 		lines.append("POL %d  CHR %d" % [officer.pol(), officer.chr()])

@@ -9,7 +9,8 @@
 			"id": "kaster",
 			"name": "Kaster",
 			"war": 82, "ldr": 96, "int": 92, "pol": 85, "chr": 88,
-			"signature_passive": "Read the Field + Heirloom Blade"
+			"signature_passive": "Read the Field + Heirloom Blade",
+			"portrait_path": "res://assets/art/characters/char_kaster_base_portrait.png"
 		},
 		{
 			"id": "bon_shi_hai",

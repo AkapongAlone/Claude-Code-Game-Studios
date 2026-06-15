@@ -34,6 +34,8 @@ var display_name: String = ""
 var is_named: bool = false
 ## Signature Passive Ability name (named officers) or generic passive (optional).
 var signature_passive: String = ""
+## res:// path to the officer's base portrait PNG. Empty string = no portrait.
+var portrait_path: String = ""
 
 var _stats: Dictionary = {}
 
@@ -48,6 +50,7 @@ static func create(p_id: String, p_name: String, stats: Dictionary, p_is_named: 
 	for stat: Stat in Stat.values():
 		var key: String = (Stat.keys()[stat] as String).to_lower()
 		officer._stats[stat] = clampi(int(stats.get(key, STAT_MIN)), STAT_MIN, STAT_MAX)
+	officer.portrait_path = String(stats.get("portrait_path", ""))
 	return officer
 
 
