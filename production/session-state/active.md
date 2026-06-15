@@ -1,78 +1,61 @@
-# Session State — Kaster's War
+# Session State — Dominion of Ages
 
-**Last updated**: 2026-06-12
-**Current task**: Playable MVP battle build — complete, 171/171 tests passing
-**Stage**: MVP Implementation (12/14 MVP systems coded; playable in Godot via F5)
+**Last updated**: 2026-06-15
+**Current task**: Prototype playtest — awaiting user verdict
+**Stage**: Concept Prototype (pre-design)
 
----
-
-## Progress
-
-- [x] All 14 MVP GDDs designed (see PROJECT-SUMMARY.md)
-- [x] Officer Stats / Terrain / Combat Resolution implemented + tested (previous session)
-- [x] **Morale System** — `src/gameplay/morale/morale_system.gd` (4 triggers, aura, 2-pass cascade, recovery)
-- [x] **Facing & Flank** — `src/gameplay/combat/facing_system.gd` (arc check, forest ambush)
-- [x] **Hex Movement** — `src/core/cube_hex.gd`, `src/gameplay/battle/battle_grid.gd`, `src/gameplay/movement/movement_rules.gd` (AP pool, Dijkstra, A*, LOS, routing)
-- [x] **Fog of War** — `src/gameplay/fog/fog_of_war.gd` (3 states, ghosts, staleness, Stratagem hook)
-- [x] **Victory/Defeat** — `src/gameplay/victory/victory_checker.gd` (4-tier eval order, route fraction, objectives)
-- [x] **Duel System** — `src/gameplay/duel/duel_engine.gd` (RPS, stamina, Read, Crushing Blow, yield)
-- [x] **Officer Passives** — `src/gameplay/officers/passive_registry.gd` (Juggernaut, Old Guard, Shadow Work, Vital Strike, Stratagem, Heirloom Blade-hidden)
-- [x] **Battle Controller** — `src/gameplay/battle/battle_controller.gd` (turn loop, placeholder enemy AI, routing phase)
-- [x] **Tactical HUD (functional)** — `src/ui/battle/tactical_hud.gd` (CanvasLayer 5)
-- [x] **Duel UI (functional)** — `src/ui/duel/duel_overlay.gd` (CanvasLayer 10, Q/W/E/R/Y keys)
-- [x] **Playable scene** — `scenes/battle/Battle.tscn` = main scene; demo battle `assets/data/battles/open_field_demo.json`
-- [x] **Test suite: 171/171 passing** (Godot 4.6.3 headless)
-- [ ] Save/Load (designed, NOT implemented — not required to play)
-- [ ] Portrait Display (designed, NOT implemented — tokens show officer initials)
+> **PROJECT PIVOT** — Kaster's War superseded. New concept: **Dominion of Ages**.
+> Old Kaster's War session state archived below in "Prior Project" section.
 
 ---
 
-## How to Play
+<!-- STATUS -->
+Epic: Dominion of Ages — Concept Prototype
+Feature: Council Stacking
+Task: Playtest prototype.html — awaiting user verdict
+<!-- /STATUS -->
 
-Open the project in Godot 4.6 → press **F5**.
+## Current Task: `/prototype council-stacking`
 
-- Click a blue squad to select; click a highlighted hex to move
-- Click a visible enemy in range to attack (ranged needs LOS, no adjacent shots)
-- **D** = challenge an adjacent enemy officer to a duel (Q/W/E stances, R = Crushing Blow for Alexsen, Y = yield)
-- **Enter** = end turn · **Esc** = deselect
-- Win: break ≥50% of enemy squads · Lose: ≥50% of yours break, Kaster's squad is eliminated, or 20 turns expire
+**Hypothesis:** "If the player slots a leader and sees stats animate, they'll feel Brotato-style satisfaction — confirmed if ≥3 voluntary swaps in 5 min."
 
-## How to Run Tests
+**Phase:** 6 — Playtest Debrief (user opens and plays `prototype.html`, then reports back)
 
-```bash
-"/Users/ek/Downloads/Godot.app/Contents/MacOS/Godot" --headless --path . --import     # once
-"/Users/ek/Downloads/Godot.app/Contents/MacOS/Godot" --headless --path . --script tests/headless_runner.gd
-```
+**Prototype path:** `prototypes/council-stacking-concept/prototype.html` (HTML, open by double-click)
 
----
-
-## Implementation Notes / Deviations (this session)
-
-1. **Enemy AI is a placeholder** — Tactical AI is Alpha-tier (#23, no GDD). AI advances toward nearest player squad and attacks when legal. Marked in battle_controller.gd.
-2. **HUD / Duel UI are functional MVP versions** — no portraits, flank-arc overlay, path preview, or aura rings yet. Full specs live in tactical-hud.md / duel-ui.md / portrait-display.md.
-3. **Save/Load skipped** — designed but not needed to make the battle playable.
-4. **Campaign-scope passives inactive** — Read the Field (Inspect action), Treatises, Quartermaster register flags but have no consumers yet.
-5. **Mutual resolve depletion = DRAW** per duel AC-25 (Core Rules tiebreak text conflicts; ACs chosen as authoritative).
-6. **Heirloom Blade ceiling bypasses the 90 damage cap** per passive AC-12 (91 expected) — flagged as GDD-internal conflict with combat Formula 3.
-7. **Field duels**: enemy always accepts (refuse penalty config exists, unused); enemy duel stances are weighted-random.
-8. **Enum collision fix**: `Squad.side` annotation must be qualified (`Squad.Side`) — bare `Side` collides with Godot's @GlobalScope Side enum.
-9. Wet-season Road/Village exemption, additive ranged terrain mods, `officer.intel()` naming — carried over from previous session.
+### Prototype Features
+- 4 category slots (Military / Economy / Diplomacy / Science) + 1 Supreme Leader slot
+- 12 leaders with ranks S/A/B, flat+% bonuses, conditional scaling synergies
+- Animated stat deltas — green tick-up / red tick-down per swap
+- Supreme Leader: exclusive skill text + downside debuff shown
+- Auto-battle test using Military stat vs escalating enemies (4 tiers)
+- Click-to-place + drag-and-drop from roster
 
 ---
 
-## Known Gaps (process)
+## New Project: Dominion of Ages
 
-- No ADRs for any implemented system — backfill via `/architecture-decision`
-- 11 GDDs still pending `/design-review`
-- No CI workflow — `/test-setup`
-- GUT named in tech prefs; custom addon-free runner in use
-- Demo battle is a single authored map; no campaign layer
+- **Concept doc**: `design/gdd/game-concept.md` ✅
+- **Pillars locked**: Every Choice Tops Up / Dream Team Across Time / Many Roads to Glory / Strategy Not Micro
+- **Core mechanic**: Council of historical leaders (5 lanes: Military/Economy/Diplomacy/Science/Civilian) — Brotato-style stacking stats + Supreme Leader capstone
+- **Engine**: Godot 4.6 (unchanged)
+
+### Next Steps (after prototype verdict)
+1. User plays `prototypes/council-stacking-concept/prototype.html` → reports PROCEED / PIVOT / KILL
+2. Write `prototypes/council-stacking-concept/REPORT.md`
+3. Archive old Kaster's War GDDs → `design/gdd/archive/`
+4. If PROCEED → `/art-bible` → `/map-systems` → `/design-system` per system
 
 ---
 
-## Next Steps
+## Prior Project: Kaster's War (SUPERSEDED)
 
-1. Playtest the demo battle (F5) — tune morale pressure & AI aggression from feel
-2. Implement Save/Load (`src/core/save/`) — last MVP system
-3. Portrait Display + HUD/Duel UI polish passes per their GDDs
-4. Backfill ADRs; run `/design-review` on the 11 pending GDDs; `/gate-check pre-production`
+Kaster's War tactical battle build — 171/171 tests passing, playable via F5 in Godot.
+GDDs in `design/gdd/` are superseded by Dominion of Ages pivot.
+Source code in `src/` is Kaster's War code — will be replaced or repurposed.
+
+Key files:
+- `src/gameplay/battle/battle_controller.gd` — main battle loop
+- `src/ui/battle/tactical_hud.gd` — HUD
+- `scenes/battle/Battle.tscn` — main scene
+- `tests/` — 171 passing GUT tests (headless runner)

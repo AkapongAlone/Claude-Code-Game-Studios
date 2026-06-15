@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<!-- PROTOTYPE - NOT FOR PRODUCTION -->
+<!-- Question: Does slotting a leader + seeing stats animate feel satisfying (Brotato-style)? -->
+<!-- Date: 2026-06-15 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dominion of Ages — Council Prototype</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1a2e;
+    color: #e0e0e0;
+    font-family: 'Georgia', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  h1 { font-size: 22px; color: #f0c040; margin-bottom: 4px; letter-spacing: 2px; }
+  .subtitle { font-size: 12px; color: #888; margin-bottom: 20px; letter-spacing: 1px; }
+
+  .main-layout {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 1100px;
+  }
+
+  /* ─── STAT PANEL ─── */
+  .stat-panel {
+    background: #16213e;
+    border: 1px solid #2a3a5e;
+    border-radius: 8px;
+    padding: 16px;
+    width: 230px;
+    flex-shrink: 0;
+  }
+  .stat-panel h2 { font-size: 13px; color: #f0c040; margin-bottom: 12px; letter-spacing: 1px; border-bottom: 1px solid #2a3a5e; padding-bottom: 6px; }
+  .stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .stat-label { font-size: 12px; color: #aaa; display: flex; align-items: center; gap: 5px; }
+  .stat-value {
+    font-size: 20px;
+    font-weight: bold;
+    color: #e0e0e0;
+    min-width: 54px;
+    text-align: right;
+    transition: color 0.1s;
+    position: relative;
+  }
+  .stat-value.up { color: #4cff91 !important; }
+  .stat-value.down { color: #ff5555 !important; }
+
+  .stat-bar-bg { width: 100%; height: 5px; background: #0d1b2e; border-radius: 3px; margin-top: 3px; }
+  .stat-bar { height: 5px; border-radius: 3px; transition: width 0.5s cubic-bezier(0.22,1,0.36,1); }
+
+  .delta-badge {
+    position: absolute;
+    right: 0;
+    top: -14px;
+    font-size: 11px;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.1s;
+    pointer-events: none;
+  }
+  .delta-badge.show { opacity: 1; animation: floatUp 1.2s forwards; }
+  @keyframes floatUp {
+    0%   { opacity: 1; transform: translateY(0); }
+    80%  { opacity: 1; transform: translateY(-18px); }
+    100% { opacity: 0; transform: translateY(-22px); }
+  }
+
+  /* ─── COUNCIL ─── */
+  .council-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .council-panel h2 { font-size: 13px; color: #f0c040; letter-spacing: 1px; }
+
+  .supreme-slot-wrap {
+    background: #1e1030;
+    border: 2px solid #9b59b6;
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .supreme-label {
+    font-size: 11px;
+    color: #c39bd3;
+    letter-spacing: 1px;
+    writing-mode: horizontal-tb;
+    width: 80px;
+    flex-shrink: 0;
+  }
+
+  .slots-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .slot {
+    width: 130px;
+    min-height: 120px;
+    background: #0d1b2e;
+    border: 2px dashed #2a3a5e;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    padding: 8px;
+    text-align: center;
+    user-select: none;
+  }
+  .slot:hover { border-color: #f0c040; background: #132040; }
+  .slot.occupied { border-style: solid; border-color: #2a3a5e; background: #132040; }
+  .slot.occupied:hover { border-color: #f0c040; }
+  .slot.drop-target { border-color: #4cff91; background: #0d2e1a; }
+  .slot.supreme { border-color: #9b59b6; }
+  .slot.supreme.occupied { border-color: #c39bd3; }
+  .slot.supreme:hover { border-color: #e056fd; }
+  .slot.advisor-slot { border-color: #4a78a8; }
+  .slot.advisor-slot.occupied { border-color: #7ab0e0; }
+  .slot.advisor-slot:hover { border-color: #9ad; }
+  .slot.mismatch { border-color: #aa3333 !important; background: #2a1414; }
+  .slot.mismatch:hover { border-color: #ff5555 !important; }
+
+  .slot-category { font-size: 11px; color: #666; margin-bottom: 6px; }
+  .slot-empty-text { font-size: 11px; color: #444; }
+  .slot-portrait { font-size: 36px; line-height: 1; margin-bottom: 4px; }
+  .slot-name { font-size: 12px; font-weight: bold; color: #e0e0e0; }
+  .slot-rank { font-size: 10px; color: #f0c040; margin-bottom: 4px; }
+  .slot-buff { font-size: 10px; color: #4cff91; line-height: 1.4; }
+  .slot-debuff { font-size: 10px; color: #ff8888; line-height: 1.4; }
+  .remove-btn {
+    position: absolute; top: 4px; right: 6px;
+    font-size: 14px; color: #555; cursor: pointer;
+    line-height: 1; background: none; border: none; color: #666;
+  }
+  .remove-btn:hover { color: #ff5555; }
+
+  /* ─── BATTLE ─── */
+  .battle-section {
+    background: #16213e;
+    border: 1px solid #2a3a5e;
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+  }
+  .battle-section h2 { font-size: 13px; color: #f0c040; margin-bottom: 10px; letter-spacing: 1px; }
+  .enemy-info { font-size: 12px; color: #aaa; margin-bottom: 10px; }
+  .battle-btn {
+    background: #8b0000;
+    border: 2px solid #cc2222;
+    color: #fff;
+    font-family: 'Georgia', serif;
+    font-size: 14px;
+    padding: 10px 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: background 0.2s;
+  }
+  .battle-btn:hover { background: #cc2222; }
+  .battle-result {
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: bold;
+    min-height: 20px;
+  }
+  .battle-result.win { color: #4cff91; }
+  .battle-result.lose { color: #ff5555; }
+  .battle-result.neutral { color: #aaa; }
+
+  /* ─── ROSTER ─── */
+  .roster-panel {
+    background: #16213e;
+    border: 1px solid #2a3a5e;
+    border-radius: 8px;
+    padding: 14px;
+    width: 100%;
+    max-width: 1100px;
+    margin-top: 16px;
+  }
+  .roster-panel h2 { font-size: 13px; color: #f0c040; margin-bottom: 10px; letter-spacing: 1px; border-bottom: 1px solid #2a3a5e; padding-bottom: 6px; }
+  .roster-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .leader-card {
+    width: 120px;
+    background: #0d1b2e;
+    border: 1px solid #2a3a5e;
+    border-radius: 6px;
+    padding: 8px;
+    cursor: grab;
+    transition: border-color 0.2s, transform 0.1s, box-shadow 0.2s;
+    user-select: none;
+    text-align: center;
+    position: relative;
+  }
+  .leader-card:hover { border-color: #f0c040; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(240,192,64,0.2); }
+  .leader-card.in-council { opacity: 0.35; cursor: not-allowed; }
+  .leader-card.in-council:hover { transform: none; border-color: #2a3a5e; box-shadow: none; }
+  .leader-card.dragging { opacity: 0.5; transform: scale(1.05); }
+  .leader-card.kw { border-color: #b8860b; background: #1c1510; }
+  .leader-card.kw:hover { border-color: #ffd700; box-shadow: 0 4px 12px rgba(184,134,11,0.35); }
+  .kw-badge {
+    position: absolute; top: -7px; left: 50%; transform: translateX(-50%);
+    background: #8b0000; color: #ffd700; font-size: 7px; letter-spacing: 0.5px;
+    padding: 1px 6px; border-radius: 6px; white-space: nowrap;
+    border: 1px solid #ffd700;
+  }
+  .card-portrait { font-size: 32px; margin-bottom: 4px; }
+  .portrait-img {
+    width: 56px; height: 56px; object-fit: cover;
+    border-radius: 6px; border: 1px solid #b8860b;
+    margin: 0 auto 4px; display: block;
+  }
+  .slot-portrait .portrait-img { width: 48px; height: 48px; }
+  .card-name { font-size: 11px; font-weight: bold; color: #e0e0e0; margin-bottom: 2px; }
+  .card-rank { font-size: 10px; margin-bottom: 3px; }
+  .rank-S { color: #ff4444; }
+  .rank-A { color: #ff9944; }
+  .rank-B { color: #f0c040; }
+  .rank-C { color: #aaaaaa; }
+  .card-category { font-size: 9px; color: #888; margin-bottom: 3px; }
+  .card-buff { font-size: 9px; color: #4cff91; line-height: 1.3; }
+  .card-debuff { font-size: 9px; color: #ff8888; line-height: 1.3; }
+
+  /* ─── TOOLTIP ─── */
+  .tooltip {
+    position: fixed;
+    background: #0a0f1e;
+    border: 1px solid #f0c040;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 11px;
+    max-width: 200px;
+    pointer-events: none;
+    z-index: 1000;
+    display: none;
+  }
+  .tooltip.visible { display: block; }
+  .tooltip-name { font-size: 13px; font-weight: bold; color: #f0c040; margin-bottom: 4px; }
+  .tooltip-skill { color: #c39bd3; margin: 4px 0; line-height: 1.4; }
+  .tooltip-buff { color: #4cff91; }
+  .tooltip-debuff { color: #ff8888; }
+
+  /* ─── SWAP COUNTER ─── */
+  .swap-counter {
+    font-size: 11px;
+    color: #888;
+    text-align: right;
+    margin-bottom: 4px;
+  }
+  .swap-counter span { color: #f0c040; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>⚔ DOMINION OF AGES</h1>
+<p class="subtitle">COUNCIL PROTOTYPE — drag leaders from the roster into your council slots</p>
+
+<div class="main-layout">
+
+  <!-- STAT PANEL -->
+  <div class="stat-panel">
+    <h2>🏛 NATIONAL STATS</h2>
+    <div id="stats-container"></div>
+    <div id="derived-box" style="margin-top:16px;border-top:1px solid #2a3a5e;padding-top:10px;">
+      <h2 style="font-size:13px;color:#f0c040;margin-bottom:10px;letter-spacing:1px;">📈 NATIONAL RESOURCES</h2>
+      <div id="derived-container"></div>
+    </div>
+    <div id="synergy-box" style="margin-top:16px;border-top:1px solid #2a3a5e;padding-top:10px;">
+      <h2 style="font-size:13px;color:#f0c040;margin-bottom:10px;letter-spacing:1px;">🔗 ACTIVE SYNERGIES</h2>
+      <div id="synergy-list"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: COUNCIL + BATTLE -->
+  <div class="council-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>👑 COUNCIL</h2>
+      <div class="swap-counter">Swaps: <span id="swap-count">0</span></div>
+    </div>
+
+    <!-- Supreme Leader + Advisor -->
+    <div class="supreme-slot-wrap">
+      <div class="supreme-label">👑<br>SUPREME<br>LEADER<br><span style="font-size:9px;color:#7d6e8a">(optional)</span></div>
+      <div class="slot supreme" id="slot-supreme" data-slot="supreme" data-category="any">
+        <div class="slot-category">Any specialty</div>
+        <div class="slot-empty-text">Drop a leader here</div>
+      </div>
+      <div class="supreme-label" style="color:#9ad;width:64px;">🪶<br>ADVISOR<br><span style="font-size:9px;color:#5a6e7d">(optional)</span></div>
+      <div class="slot supreme advisor-slot" id="slot-advisor" data-slot="advisor" data-category="any">
+        <div class="slot-category">Counsel</div>
+        <div class="slot-empty-text">Advises the<br>Supreme Leader</div>
+      </div>
+      <div style="flex:1;font-size:11px;color:#888;line-height:1.6;padding-left:10px;">
+        <div style="color:#c39bd3;margin-bottom:5px;">👑 Supreme buffs <strong>all</strong> leaders + unlocks an exclusive skill (has a downside).</div>
+        <div style="color:#9ad;">🪶 Advisor: effect <strong>depends on who you place</strong> — strategists give big buffs &amp; cut the Supreme's downside; warriors barely help. Needs a Supreme present. <em>(Zhuge Liang to Liu Bei)</em></div>
+      </div>
+    </div>
+
+    <!-- Category slots -->
+    <div class="slots-row" id="category-slots"></div>
+
+    <!-- Battle section -->
+    <div class="battle-section">
+      <h2>⚔ AUTO-BATTLE TEST</h2>
+      <div class="enemy-info" id="enemy-info">Enemy: <strong>Nomad Raiders</strong> — Strength <strong>60</strong></div>
+      <button class="battle-btn" onclick="doBattle()">MOBILIZE &amp; BATTLE</button>
+      <div class="battle-result neutral" id="battle-result">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ROSTER -->
+<div class="roster-panel">
+  <h2>📜 LEADER ROSTER — drag a leader into a slot above</h2>
+  <div class="roster-grid" id="roster-grid"></div>
+</div>
+
+<!-- TOOLTIP -->
+<div class="tooltip" id="tooltip">
+  <div class="tooltip-name" id="tt-name"></div>
+  <div class="tooltip-skill" id="tt-skill"></div>
+  <div class="tooltip-buff" id="tt-buff"></div>
+  <div class="tooltip-debuff" id="tt-debuff"></div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────────────────────────────────
+
+const CATEGORIES = [
+  { id: 'military',  label: '⚔️ Military',  color: '#cc3333' },
+  { id: 'economy',   label: '💰 Economy',   color: '#44aa44' },
+  { id: 'diplomacy', label: '🕊️ Diplomacy', color: '#4488cc' },
+  { id: 'science',   label: '🔬 Science',   color: '#8844cc' },
+  { id: 'civilian',  label: '🏛️ Civilian',  color: '#cc8800' },
+];
+
+// stat keys
+const STAT_META = {
+  military:  { label: '⚔️ Military Power', max: 300, color: '#cc3333' },
+  economy:   { label: '💰 Economy',        max: 300, color: '#44aa44' },
+  diplomacy: { label: '🕊️ Diplomacy',      max: 300, color: '#4488cc' },
+  science:   { label: '🔬 Science',         max: 300, color: '#8844cc' },
+};
+
+// Derived national resources — computed FROM the four main stats.
+const DERIVED_META = {
+  treasury: { label: '💰 Income / turn',  max: 180, color: '#44aa44', suffix: '' },
+  tech:     { label: '🔬 Research / turn', max: 180, color: '#8844cc', suffix: '' },
+  manpower: { label: '🛡️ Manpower',        max: 280, color: '#cc8800', suffix: '' },
+  wardrive: { label: '⚔️ War Drive',        max: 200, color: '#cc3333', suffix: '' },
+  order:    { label: '☮️ Order',            max: 100, color: '#4488cc', suffix: '%' },
+};
+
+function calcDerived(s) {
+  return {
+    treasury: Math.round(s.economy * 0.5),
+    tech:     Math.round(s.science * 0.5),
+    manpower: Math.round((s.economy + s.military) * 0.4),
+    wardrive: Math.round(s.military * 0.6),
+    order:    Math.max(0, Math.min(100, Math.round(50 + s.diplomacy * 0.3 - s.military * 0.15))),
+  };
+}
+
+// flat: direct addition. pct: multiplier applied to flat sum. cond: { key, threshold, mult }
+const LEADERS = [
+  // ─── KASTER'S WAR ORIGINAL CAST ───
+  {
+    id: 'kaster', name: 'Kaster', portrait: '🗡️', img: '../../assets/art/characters/char_kaster_base_portrait.png', origin: 'kw',
+    rank: 'S', category: 'military',
+    flat: { military: 30 }, pct: { military: 0.15 },
+    flat2: { diplomacy: 15, science: 15 },
+    desc: '+30 Military, +15 Diplomacy, +15 Science, +15% Military.',
+    supremeSkill: 'Read the Field: all council leaders\' bonuses +20%. Unlocks "Commander\'s Insight" — reveal enemy strength before every battle.',
+    supremeDebuff: { economy: -10 },
+  },
+  {
+    id: 'alexsen', name: 'Alexsen', portrait: '💪', origin: 'kw',
+    rank: 'S', category: 'military',
+    flat: { military: 45 }, pct: { military: 0.10 },
+    desc: '+45 Military, +10% Military. (Pure warrior — no civil bonuses.)',
+    supremeSkill: 'Juggernaut: Military leaders ignore all penalties. Unlocks "Crushing Blow" — one devastating attack per war.',
+    supremeDebuff: { science: -25, diplomacy: -20 },
+  },
+  {
+    id: 'thane', name: 'Thane', portrait: '🏹', origin: 'kw',
+    rank: 'A', category: 'military',
+    flat: { military: 30 },
+    cond: { stat: 'military', threshold: 3, countLeaders: 'military', bonusPct: { military: 0.15 } },
+    desc: '+30 Military. If ≥3 Military leaders, +15% Military.',
+    supremeSkill: 'Shadow Work: your armies strike first from any terrain. Unlocks "Forest Ambush".',
+    supremeDebuff: { diplomacy: -15 },
+  },
+  {
+    id: 'bon', name: 'Bon shi hai', portrait: '👁️', origin: 'kw',
+    rank: 'A', category: 'science',
+    flat: { science: 30, diplomacy: 12 }, pct: { science: 0.10 },
+    desc: '+30 Science, +12 Diplomacy, +10% Science.',
+    supremeSkill: 'Stratagem: full map vision. Science leaders +25% buff.',
+    supremeDebuff: { military: -15 },
+  },
+  {
+    id: 'zhuge', name: 'Zhuge Jian', portrait: '🪶', origin: 'kw',
+    rank: 'S', category: 'science',
+    flat: { science: 40, diplomacy: 25 }, pct: { science: 0.20 },
+    desc: '+40 Science, +25 Diplomacy, +20% Science.',
+    supremeSkill: 'The Treatises: +1 council slot. All Science & Diplomacy leaders +30%.',
+    supremeDebuff: { military: -20 },
+  },
+  // ─── HISTORICAL LEGENDS ───
+  {
+    id: 'napoleon', name: 'Napoleon Bonaparte', portrait: '⚜️',
+    rank: 'S', category: 'military',
+    flat: { military: 40 }, pct: { military: 0.25 },
+    supremeSkill: 'Grand Armée: all Military leaders +50% buff. Unlocks "Lightning Strike" — your armies attack first always.',
+    supremeDebuff: { diplomacy: -30 },
+    desc: 'Master tactician. +40 Military, +25% Military.',
+  },
+  {
+    id: 'genghis', name: 'Genghis Khan', portrait: '🐎',
+    rank: 'S', category: 'military',
+    flat: { military: 35 }, pct: { military: 0.20 },
+    cond: { stat: 'military', threshold: 150, bonusPct: { military: 0.15 } },
+    desc: '+35 Military, +20% Military. If total Military ≥150, further +15%.',
+    supremeSkill: 'Mongol Horde: units cost 50% fewer resources. Unlocks "Blitz" — conquer 2 provinces per battle.',
+    supremeDebuff: { economy: -20 },
+  },
+  {
+    id: 'caesar', name: 'Julius Caesar', portrait: '🦅',
+    rank: 'A', category: 'military',
+    flat: { military: 25, civilian: 0 }, pct: { military: 0.10 },
+    flat2: { diplomacy: 10 },
+    desc: '+25 Military, +10% Military, +10 Diplomacy.',
+    supremeSkill: 'Roman Order: all slots +1 capacity, legions never route.',
+    supremeDebuff: { science: -15 },
+  },
+  {
+    id: 'cleopatra', name: 'Cleopatra VII', portrait: '🐍',
+    rank: 'A', category: 'diplomacy',
+    flat: { diplomacy: 35, economy: 15 },
+    desc: '+35 Diplomacy, +15 Economy.',
+    supremeSkill: 'Eternal Throne: Diplomacy leaders +40% buff. Unlocks "Pact of Gold" — auto-ally one AI nation per era.',
+    supremeDebuff: { military: -20 },
+  },
+  {
+    id: 'bismarck', name: 'Otto von Bismarck', portrait: '🎩',
+    rank: 'A', category: 'diplomacy',
+    flat: { diplomacy: 30 }, pct: { diplomacy: 0.15 },
+    desc: '+30 Diplomacy, +15% Diplomacy.',
+    supremeSkill: 'Iron Diplomat: treaties cost half. Unlocks "Realpolitik" — declare war without Diplomacy penalty.',
+    supremeDebuff: { economy: -15 },
+  },
+  {
+    id: 'medici', name: 'Lorenzo de\' Medici', portrait: '💎',
+    rank: 'A', category: 'economy',
+    flat: { economy: 35 }, pct: { economy: 0.20 },
+    desc: '+35 Economy, +20% Economy.',
+    supremeSkill: 'Golden Age: Economy leaders +50%. Unlocks "Trade Empire" — income doubles every 5 turns.',
+    supremeDebuff: { military: -15 },
+  },
+  {
+    id: 'smith', name: 'Adam Smith', portrait: '📊',
+    rank: 'B', category: 'economy',
+    flat: { economy: 25 }, pct: { economy: 0.15 },
+    desc: '+25 Economy, +15% Economy.',
+    supremeSkill: 'Invisible Hand: all Economy leaders ignore trade penalties.',
+    supremeDebuff: { diplomacy: -10 },
+  },
+  {
+    id: 'einstein', name: 'Albert Einstein', portrait: '🧬',
+    rank: 'S', category: 'science',
+    flat: { science: 40 }, pct: { science: 0.30 },
+    desc: '+40 Science, +30% Science.',
+    supremeSkill: 'Theory of Everything: Science leaders +60%. Unlocks "Manhattan" — single-use devastating attack.',
+    supremeDebuff: { diplomacy: -25 },
+  },
+  {
+    id: 'tesla', name: 'Nikola Tesla', portrait: '⚡',
+    rank: 'A', category: 'science',
+    flat: { science: 30, economy: 10 },
+    desc: '+30 Science, +10 Economy.',
+    supremeSkill: 'Wireless Power: Economy and Science leaders share +20% of each other\'s flat bonus.',
+    supremeDebuff: { military: -10 },
+  },
+  {
+    id: 'hammurabi', name: 'Hammurabi', portrait: '⚖️',
+    rank: 'B', category: 'civilian',
+    flat: { diplomacy: 20, economy: 15 },
+    desc: '+20 Diplomacy, +15 Economy.',
+    supremeSkill: 'Code of Law: population grows 2× faster, unlocks extra council slots sooner.',
+    supremeDebuff: { military: -20, science: -10 },
+  },
+  {
+    id: 'davinci', name: 'Leonardo da Vinci', portrait: '🎨',
+    rank: 'A', category: 'science',
+    flat: { science: 20, economy: 10, military: 10 },
+    desc: '+20 Science, +10 Economy, +10 Military.',
+    supremeSkill: 'Renaissance Man: all category bonuses +15%.',
+    supremeDebuff: { diplomacy: -10 },
+  },
+  {
+    id: 'suntzu', name: 'Sun Tzu', portrait: '📖',
+    rank: 'A', category: 'military',
+    flat: { military: 20 },
+    cond: { stat: 'military', threshold: 3, countLeaders: 'military', bonusPct: { military: 0.20 } },
+    desc: '+20 Military. If ≥3 Military leaders, +20% Military.',
+    supremeSkill: 'The Art of War: enemies\' Military stat −30% in every battle.',
+    supremeDebuff: { economy: -20 },
+  },
+  // ─── ADDED: ECONOMY ───
+  { id:'fugger', name:'Jakob Fugger', portrait:'🏦', rank:'B', category:'economy',
+    flat:{ economy:28 }, pct:{ economy:0.12 },
+    desc:'+28 Economy, +12% Economy.',
+    supremeSkill:'Banker to Kings: Economy leaders fund armies for free.', supremeDebuff:{ military:-10 } },
+  { id:'musa', name:'Mansa Musa', portrait:'🪙', rank:'A', category:'economy',
+    flat:{ economy:38 }, pct:{ economy:0.10 },
+    desc:'+38 Economy, +10% Economy.',
+    supremeSkill:'Golden Pilgrimage: Economy +50%, gift gold to sway any nation.', supremeDebuff:{ military:-15 } },
+  // ─── ADDED: DIPLOMACY ───
+  { id:'talleyrand', name:'Talleyrand', portrait:'🎭', rank:'A', category:'diplomacy',
+    flat:{ diplomacy:30 }, pct:{ diplomacy:0.10 },
+    desc:'+30 Diplomacy, +10% Diplomacy.',
+    supremeSkill:'Master of Survival: never lose an ally from war declarations.', supremeDebuff:{ military:-10 } },
+  { id:'metternich', name:'Metternich', portrait:'🍷', rank:'B', category:'diplomacy',
+    flat:{ diplomacy:25, science:5 },
+    desc:'+25 Diplomacy, +5 Science.',
+    supremeSkill:'Concert of Powers: freeze one rival nation per era.', supremeDebuff:{ military:-10 } },
+  // ─── ADDED: CIVILIAN / ADMIN ───
+  { id:'augustus', name:'Augustus', portrait:'🏛️', rank:'A', category:'civilian',
+    flat:{ economy:20, diplomacy:20 },
+    desc:'+20 Economy, +20 Diplomacy.',
+    supremeSkill:'Pax Romana: +1 council slot, internal unrest halved.', supremeDebuff:{ military:-10 } },
+  { id:'pericles', name:'Pericles', portrait:'🏺', rank:'B', category:'civilian',
+    flat:{ economy:15, science:12, diplomacy:10 },
+    desc:'+15 Economy, +12 Science, +10 Diplomacy.',
+    supremeSkill:'Golden Age of Athens: all non-Military lanes +20%.', supremeDebuff:{ military:-15 } },
+  // ─── ADDED: SCIENCE ───
+  { id:'newton', name:'Isaac Newton', portrait:'🍎', rank:'A', category:'science',
+    flat:{ science:32 }, pct:{ science:0.12 },
+    desc:'+32 Science, +12% Science.',
+    supremeSkill:'Principia: Science leaders +40%, unlock advanced units early.', supremeDebuff:{ economy:-10 } },
+];
+
+// ─── RELATIONSHIP DATA (kept separate from LEADERS for clarity) ───
+const NATION = {
+  kaster:'Kastoria', alexsen:'Kastoria', thane:'Kastoria', bon:'Kastoria', zhuge:'Kastoria',
+  napoleon:'France', talleyrand:'France',
+  caesar:'Rome', augustus:'Rome',
+  genghis:'Mongolia', suntzu:'China',
+  cleopatra:'Egypt', bismarck:'Germany', einstein:'Germany', fugger:'Germany',
+  medici:'Italy', davinci:'Italy',
+  smith:'Britain', newton:'Britain',
+  tesla:'Serbia', hammurabi:'Babylon', musa:'Mali', metternich:'Austria', pericles:'Greece',
+};
+// friendships — one direction is enough; checked symmetrically
+const FRIENDS = {
+  kaster: ['alexsen','thane','bon','zhuge'],
+  caesar: ['cleopatra'],
+  medici: ['davinci'],
+  einstein: ['tesla'],
+};
+// nations a leader dislikes — if present in council, that leader is debuffed
+const DISLIKES = {
+  napoleon: ['Britain','Austria'],
+  bismarck: ['France'],
+  genghis: ['China'],
+  suntzu: ['Mongolia'],
+  metternich: ['France'],
+};
+
+// What each leader provides WHEN PLACED AS ADVISOR (effect depends on who they are).
+//   allPct       — council-wide % added to these stats
+//   debuffReduce — fraction of the Supreme Leader's downside removed (0..1)
+// Leaders without an entry fall back to a weak generalist effect (see getAdvisorEffect).
+const ADVISOR_EFFECTS = {
+  // ── strategists / advisors: the ideal counselors ──
+  zhuge:      { allPct:{ science:0.20, diplomacy:0.15 }, debuffReduce:0.75, desc:'Master strategist — +20% Science, +15% Diplomacy, downside −75%' },
+  bon:        { allPct:{ science:0.15, military:0.05 },  debuffReduce:0.50, desc:'Spymaster — +15% Science, +5% Military, downside −50%' },
+  talleyrand: { allPct:{ diplomacy:0.20 },               debuffReduce:0.50, desc:'Master diplomat — +20% Diplomacy, downside −50%' },
+  metternich: { allPct:{ diplomacy:0.15 },               debuffReduce:0.40, desc:'Coalition-builder — +15% Diplomacy, downside −40%' },
+  einstein:   { allPct:{ science:0.22 },                 debuffReduce:0.40, desc:'Genius — +22% Science, downside −40%' },
+  davinci:    { allPct:{ science:0.10, economy:0.10, military:0.05 }, debuffReduce:0.30, desc:'Polymath — +10% Science & Economy, +5% Military, downside −30%' },
+  newton:     { allPct:{ science:0.18 },                 debuffReduce:0.30, desc:'Natural philosopher — +18% Science, downside −30%' },
+  smith:      { allPct:{ economy:0.20 },                 debuffReduce:0.30, desc:'Economist — +20% Economy, downside −30%' },
+  medici:     { allPct:{ economy:0.15, diplomacy:0.10 }, debuffReduce:0.30, desc:'Patron — +15% Economy, +10% Diplomacy, downside −30%' },
+  bismarck:   { allPct:{ diplomacy:0.15, military:0.10 },debuffReduce:0.40, desc:'Iron Chancellor — +15% Diplomacy, +10% Military, downside −40%' },
+  cleopatra:  { allPct:{ diplomacy:0.18 },               debuffReduce:0.35, desc:'Envoy — +18% Diplomacy, downside −35%' },
+  kaster:     { allPct:{ military:0.10, diplomacy:0.10 },debuffReduce:0.30, desc:'Veteran commander — +10% Military & Diplomacy, downside −30%' },
+  suntzu:     { allPct:{ military:0.18 },                debuffReduce:0.25, desc:'War sage — +18% Military, downside −25%' },
+  // ── poor advisors: great leaders, bad counselors ──
+  napoleon:   { allPct:{ military:0.12 },                debuffReduce:0.10, desc:'Emperor — +12% Military, downside −10% (he\'d rather rule)' },
+  genghis:    { allPct:{ military:0.10 },                debuffReduce:0.00, desc:'Conqueror — +10% Military, no patience for politics' },
+  alexsen:    { allPct:{ military:0.08 },                debuffReduce:0.00, desc:'Warrior — only +8% Military, offers no counsel' },
+  thane:      { allPct:{ military:0.08 },                debuffReduce:0.00, desc:'Ranger — only +8% Military, offers no counsel' },
+};
+
+// Resolve an advisor's effect; weak generalist fallback for anyone not listed.
+function getAdvisorEffect(L) {
+  if (ADVISOR_EFFECTS[L.id]) return ADVISOR_EFFECTS[L.id];
+  const stat = L.category === 'civilian' ? 'diplomacy' : L.category;
+  return { allPct: { [stat]: 0.10 }, debuffReduce: 0, desc: `Generalist counsel — +10% ${stat}` };
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────
+
+let council = { supreme: null, advisor: null, military: null, economy: null, diplomacy: null, science: null };
+const MISMATCH_PENALTY = 0.2; // off-specialty leaders keep only 20% of their bonuses
+let swapCount = 0;
+let prevStats = { military: 50, economy: 50, diplomacy: 50, science: 50 };
+let prevDerived = calcDerived(prevStats);
+
+// Returns an <img> if the leader has a portrait image, otherwise the emoji.
+function portraitHTML(L) {
+  if (L.img) return `<img class="portrait-img" src="${L.img}" alt="${L.name}" onerror="this.replaceWith(document.createTextNode('${L.portrait}'))">`;
+  return L.portrait;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// STAT CALCULATION
+// ─────────────────────────────────────────────────────────────────────────
+
+function calcStats() {
+  const base = { military: 50, economy: 50, diplomacy: 50, science: 50 };
+  const flat = { ...base };
+  const pctBonus = { military: 0, economy: 0, diplomacy: 0, science: 0 };
+  const supremeLeader = council.supreme ? LEADERS.find(l => l.id === council.supreme) : null;
+
+  // Category multiplier from supreme
+  let supremeCategoryMult = {};
+  if (supremeLeader && supremeLeader.supremeSkill) {
+    // e.g. Napoleon → military leaders +50%
+    if (supremeLeader.id === 'napoleon') supremeCategoryMult['military'] = 0.50;
+    else if (supremeLeader.id === 'genghis') supremeCategoryMult['military'] = 0.30;
+    else if (supremeLeader.id === 'cleopatra') supremeCategoryMult['diplomacy'] = 0.40;
+    else if (supremeLeader.id === 'bismarck') supremeCategoryMult['diplomacy'] = 0.25;
+    else if (supremeLeader.id === 'medici') supremeCategoryMult['economy'] = 0.50;
+    else if (supremeLeader.id === 'smith') supremeCategoryMult['economy'] = 0.30;
+    else if (supremeLeader.id === 'einstein') supremeCategoryMult['science'] = 0.60;
+    else if (supremeLeader.id === 'tesla') { supremeCategoryMult['science'] = 0.30; supremeCategoryMult['economy'] = 0.20; }
+    else if (supremeLeader.id === 'davinci') { supremeCategoryMult['military'] = 0.15; supremeCategoryMult['economy'] = 0.15; supremeCategoryMult['science'] = 0.15; supremeCategoryMult['diplomacy'] = 0.15; }
+  }
+
+  const allSlotKeys = ['military','economy','diplomacy','science','supreme','advisor'];
+  const activeMilLeaders = allSlotKeys.filter(k => council[k] && LEADERS.find(l=>l.id===council[k])?.category === 'military').length;
+
+  allSlotKeys.forEach(slotKey => {
+    const id = council[slotKey];
+    if (!id) return;
+    const L = LEADERS.find(l => l.id === id);
+    if (!L) return;
+
+    // Advisor only contributes when a Supreme Leader is present (someone to advise).
+    if (slotKey === 'advisor' && !council.supreme) return;
+
+    // Off-specialty penalty: category slots require the leader's own category.
+    // Supreme & Advisor are flexible (accept any specialty).
+    const isFlexSlot = (slotKey === 'supreme' || slotKey === 'advisor');
+    const mismatch = !isFlexSlot && L.category !== slotKey;
+    const mult = mismatch ? MISMATCH_PENALTY : 1;
+
+    // flat
+    if (L.flat)  Object.entries(L.flat ).forEach(([k, v]) => { if (flat[k] !== undefined) flat[k] += v * mult; });
+    if (L.flat2) Object.entries(L.flat2).forEach(([k, v]) => { if (flat[k] !== undefined) flat[k] += v * mult; });
+
+    // pct
+    if (L.pct) Object.entries(L.pct).forEach(([k, v]) => { if (pctBonus[k] !== undefined) pctBonus[k] += v * mult; });
+
+    // conditional
+    if (L.cond && L.cond.countLeaders && activeMilLeaders >= L.cond.threshold && L.cond.bonusPct) {
+      Object.entries(L.cond.bonusPct).forEach(([k,v]) => { if (pctBonus[k] !== undefined) pctBonus[k] += v * mult; });
+    }
+
+    // supreme category buff applies to matching-category council leaders
+    if (!isFlexSlot && supremeLeader && supremeCategoryMult[L.category]) {
+      if (L.flat) Object.entries(L.flat).forEach(([k, v]) => {
+        if (flat[k] !== undefined && k === L.category) {
+          flat[k] += Math.round(v * supremeCategoryMult[L.category] * mult);
+        }
+      });
+    }
+  });
+
+  // ─── RELATIONSHIP SYNERGIES (nation bond / allies / dislikes) ───
+  const councilList = [];
+  ['military','economy','diplomacy','science','supreme','advisor'].forEach(sk => {
+    const id = council[sk];
+    if (id) { const L = LEADERS.find(l => l.id === id); if (L) councilList.push(L); }
+  });
+  const nationsPresent = councilList.map(l => NATION[l.id]);
+  const catStat = (cat) => cat === 'civilian' ? 'diplomacy' : cat;
+  const synergyLog = [];
+  councilList.forEach(L => {
+    const stat = catStat(L.category);
+    if (pctBonus[stat] === undefined) return;
+    const nation = NATION[L.id];
+    // same-nation bond
+    if (nationsPresent.filter(n => n === nation).length >= 2) {
+      pctBonus[stat] += 0.12;
+      synergyLog.push({ kind:'nation', text:`🏳 ${nation} bond — ${L.name}: +12% ${stat}` });
+    }
+    // ally present
+    const hasFriend = councilList.some(o => o.id !== L.id &&
+      ((FRIENDS[L.id]||[]).includes(o.id) || (FRIENDS[o.id]||[]).includes(L.id)));
+    if (hasFriend) {
+      pctBonus[stat] += 0.10;
+      synergyLog.push({ kind:'friend', text:`🤝 ${L.name}: ally in council +10% ${stat}` });
+    }
+    // disliked nation present
+    const foe = councilList.find(o => o.id !== L.id && (DISLIKES[L.id]||[]).includes(NATION[o.id]));
+    if (foe) {
+      pctBonus[stat] -= 0.15;
+      synergyLog.push({ kind:'dislike', text:`💢 ${L.name} resents ${NATION[foe.id]} (${foe.name}): −15% ${stat}` });
+    }
+  });
+  window.__synergyLog = synergyLog;
+
+  // Advisor — its effect depends on WHO is placed (only active with a Supreme Leader)
+  const advisorActive = !!(council.supreme && council.advisor);
+  const advLeader = advisorActive ? LEADERS.find(l => l.id === council.advisor) : null;
+  const advEff = advLeader ? getAdvisorEffect(advLeader) : null;
+
+  // supreme debuff — reduced by the advisor's counsel (amount varies by advisor)
+  if (supremeLeader && supremeLeader.supremeDebuff) {
+    const debuffMult = advEff ? (1 - advEff.debuffReduce) : 1;
+    Object.entries(supremeLeader.supremeDebuff).forEach(([k, v]) => {
+      if (pctBonus[k] !== undefined) pctBonus[k] += (v / 100) * debuffMult;
+    });
+  }
+
+  // advisor's council-wide buff (specific to the placed leader)
+  if (advEff) {
+    Object.entries(advEff.allPct).forEach(([k, v]) => { if (pctBonus[k] !== undefined) pctBonus[k] += v; });
+    if (window.__synergyLog) window.__synergyLog.push({ kind:'friend', text:`🪶 ${advLeader.name} advises: ${advEff.desc}` });
+  }
+
+  // supreme caesar flat bonus to all slots
+  if (supremeLeader?.id === 'caesar') {
+    Object.keys(flat).forEach(k => { flat[k] += 5; });
+  }
+
+  const result = {};
+  Object.keys(base).forEach(k => {
+    result[k] = Math.max(0, Math.round(flat[k] * (1 + pctBonus[k])));
+  });
+  return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// RENDER STATS
+// ─────────────────────────────────────────────────────────────────────────
+
+function renderStats(animate) {
+  const stats = calcStats();
+  const container = document.getElementById('stats-container');
+
+  Object.entries(STAT_META).forEach(([key, meta]) => {
+    let row = document.getElementById('stat-row-' + key);
+    if (!row) {
+      row = document.createElement('div');
+      row.id = 'stat-row-' + key;
+      row.innerHTML = `
+        <div class="stat-row">
+          <div class="stat-label">${meta.label}</div>
+          <div class="stat-value" id="sv-${key}">
+            <span class="delta-badge" id="delta-${key}"></span>
+            <span id="sv-num-${key}">—</span>
+          </div>
+        </div>
+        <div class="stat-bar-bg"><div class="stat-bar" id="bar-${key}" style="background:${meta.color};width:0%"></div></div>
+        <div style="margin-bottom:12px;"></div>
+      `;
+      container.appendChild(row);
+    }
+
+    const numEl = document.getElementById('sv-num-' + key);
+    const barEl = document.getElementById('bar-' + key);
+    const svEl = document.getElementById('sv-' + key);
+    const deltaEl = document.getElementById('delta-' + key);
+
+    const prev = prevStats[key] || 50;
+    const curr = stats[key];
+    const diff = curr - prev;
+
+    numEl.textContent = curr;
+    barEl.style.width = Math.min(100, (curr / meta.max) * 100) + '%';
+
+    if (animate && diff !== 0) {
+      svEl.classList.remove('up', 'down');
+      void svEl.offsetWidth;
+      svEl.classList.add(diff > 0 ? 'up' : 'down');
+      setTimeout(() => svEl.classList.remove('up', 'down'), 700);
+
+      deltaEl.classList.remove('show');
+      void deltaEl.offsetWidth;
+      deltaEl.textContent = (diff > 0 ? '+' : '') + diff;
+      deltaEl.style.color = diff > 0 ? '#4cff91' : '#ff5555';
+      deltaEl.classList.add('show');
+      setTimeout(() => deltaEl.classList.remove('show'), 1200);
+    }
+  });
+
+  renderDerived(stats, animate);
+  prevStats = { ...stats };
+}
+
+function renderDerived(stats, animate) {
+  const derived = calcDerived(stats);
+  const container = document.getElementById('derived-container');
+
+  Object.entries(DERIVED_META).forEach(([key, meta]) => {
+    let row = document.getElementById('drow-' + key);
+    if (!row) {
+      row = document.createElement('div');
+      row.id = 'drow-' + key;
+      row.innerHTML = `
+        <div class="stat-row">
+          <div class="stat-label">${meta.label}</div>
+          <div class="stat-value" id="dv-${key}" style="font-size:16px;">
+            <span class="delta-badge" id="ddelta-${key}"></span>
+            <span id="dv-num-${key}">—</span>
+          </div>
+        </div>
+        <div class="stat-bar-bg"><div class="stat-bar" id="dbar-${key}" style="background:${meta.color};width:0%"></div></div>
+        <div style="margin-bottom:10px;"></div>
+      `;
+      container.appendChild(row);
+    }
+
+    const numEl = document.getElementById('dv-num-' + key);
+    const barEl = document.getElementById('dbar-' + key);
+    const dvEl = document.getElementById('dv-' + key);
+    const deltaEl = document.getElementById('ddelta-' + key);
+
+    const prev = (prevDerived[key] !== undefined) ? prevDerived[key] : derived[key];
+    const curr = derived[key];
+    const diff = curr - prev;
+
+    numEl.textContent = curr + meta.suffix;
+    barEl.style.width = Math.min(100, (curr / meta.max) * 100) + '%';
+
+    if (animate && diff !== 0) {
+      dvEl.classList.remove('up', 'down');
+      void dvEl.offsetWidth;
+      dvEl.classList.add(diff > 0 ? 'up' : 'down');
+      setTimeout(() => dvEl.classList.remove('up', 'down'), 700);
+
+      deltaEl.classList.remove('show');
+      void deltaEl.offsetWidth;
+      deltaEl.textContent = (diff > 0 ? '+' : '') + diff;
+      deltaEl.style.color = diff > 0 ? '#4cff91' : '#ff5555';
+      deltaEl.classList.add('show');
+      setTimeout(() => deltaEl.classList.remove('show'), 1200);
+    }
+  });
+
+  prevDerived = { ...derived };
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// RENDER COUNCIL SLOTS
+// ─────────────────────────────────────────────────────────────────────────
+
+function renderCouncil() {
+  // Category slots
+  const container = document.getElementById('category-slots');
+  container.innerHTML = '';
+
+  const catSlots = ['military', 'economy', 'diplomacy', 'science'];
+  catSlots.forEach(cat => {
+    const catMeta = CATEGORIES.find(c => c.id === cat);
+    const slot = document.createElement('div');
+    slot.className = 'slot' + (council[cat] ? ' occupied' : '');
+    slot.id = 'slot-' + cat;
+    slot.dataset.slot = cat;
+    slot.dataset.category = cat;
+
+    const leaderId = council[cat];
+    if (leaderId) {
+      const L = LEADERS.find(l => l.id === leaderId);
+      const mismatch = L.category !== cat;
+      if (mismatch) slot.className += ' mismatch';
+      const catMetaL = CATEGORIES.find(c => c.id === L.category);
+      slot.innerHTML = `
+        <button class="remove-btn" onclick="removeLeader('${cat}')">✕</button>
+        <div class="slot-portrait">${portraitHTML(L)}</div>
+        <div class="slot-rank rank-${L.rank}">${'★'.repeat(L.rank === 'S' ? 4 : L.rank === 'A' ? 3 : L.rank === 'B' ? 2 : 1)} ${L.rank}</div>
+        <div class="slot-name">${L.name}</div>
+        <div class="slot-buff">${L.desc}</div>
+        ${mismatch ? `<div class="slot-debuff" style="margin-top:3px">⚠ Off-specialty! Belongs in ${catMetaL?.label}. Bonuses ×${MISMATCH_PENALTY}</div>` : ''}
+      `;
+    } else {
+      slot.innerHTML = `
+        <div class="slot-category" style="color:${catMeta.color}">${catMeta.label}</div>
+        <div class="slot-empty-text">Drop leader here</div>
+      `;
+    }
+    setupSlotDrop(slot);
+    container.appendChild(slot);
+  });
+
+  // Supreme
+  const supSlot = document.getElementById('slot-supreme');
+  const supId = council.supreme;
+  if (supId) {
+    const L = LEADERS.find(l => l.id === supId);
+    const debuffStr = L.supremeDebuff ? Object.entries(L.supremeDebuff).map(([k,v]) => `${k} ${v}%`).join(', ') : '';
+    supSlot.className = 'slot supreme occupied';
+    supSlot.innerHTML = `
+      <button class="remove-btn" onclick="removeLeader('supreme')">✕</button>
+      <div class="slot-portrait">${L.portrait}</div>
+      <div class="slot-rank rank-${L.rank}">${'★'.repeat(L.rank === 'S' ? 4 : L.rank === 'A' ? 3 : L.rank === 'B' ? 2 : 1)} ${L.rank}</div>
+      <div class="slot-name">${L.name}</div>
+      <div class="slot-buff" style="font-size:9px;margin-top:2px">${L.supremeSkill}</div>
+      ${debuffStr ? `<div class="slot-debuff" style="margin-top:3px">⚠ ${debuffStr}</div>` : ''}
+    `;
+  } else {
+    supSlot.className = 'slot supreme';
+    supSlot.innerHTML = `<div class="slot-category">Any specialty</div><div class="slot-empty-text">Drop a leader here</div>`;
+  }
+  setupSlotDrop(supSlot);
+
+  // Advisor
+  const advSlot = document.getElementById('slot-advisor');
+  const advId = council.advisor;
+  if (advId) {
+    const L = LEADERS.find(l => l.id === advId);
+    const inactive = !council.supreme;
+    advSlot.className = 'slot supreme advisor-slot occupied' + (inactive ? ' mismatch' : '');
+    advSlot.innerHTML = `
+      <button class="remove-btn" onclick="removeLeader('advisor')">✕</button>
+      <div class="slot-portrait">${portraitHTML(L)}</div>
+      <div class="slot-rank rank-${L.rank}">${'★'.repeat(L.rank === 'S' ? 4 : L.rank === 'A' ? 3 : L.rank === 'B' ? 2 : 1)} ${L.rank}</div>
+      <div class="slot-name">${L.name}</div>
+      <div class="slot-buff">${L.desc}</div>
+      ${inactive ? `<div class="slot-debuff" style="margin-top:3px">⚠ No Supreme Leader to advise — inactive</div>`
+                 : `<div style="font-size:9px;color:#9ad;margin-top:3px">🪶 ${getAdvisorEffect(L).desc}</div>`}
+    `;
+  } else {
+    advSlot.className = 'slot supreme advisor-slot';
+    advSlot.innerHTML = `<div class="slot-category">Counsel</div><div class="slot-empty-text">Advises the<br>Supreme Leader</div>`;
+  }
+  setupSlotDrop(advSlot);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// RENDER ROSTER
+// ─────────────────────────────────────────────────────────────────────────
+
+function renderRoster() {
+  const grid = document.getElementById('roster-grid');
+  grid.innerHTML = '';
+  const inCouncil = new Set(Object.values(council).filter(Boolean));
+
+  LEADERS.forEach(L => {
+    const used = inCouncil.has(L.id);
+    const card = document.createElement('div');
+    card.className = 'leader-card' + (used ? ' in-council' : '') + (L.origin === 'kw' ? ' kw' : '');
+    card.id = 'card-' + L.id;
+    card.draggable = !used;
+    card.dataset.leaderId = L.id;
+
+    const stars = '★'.repeat(L.rank === 'S' ? 4 : L.rank === 'A' ? 3 : L.rank === 'B' ? 2 : 1);
+    const catMeta = CATEGORIES.find(c => c.id === L.category);
+    card.innerHTML = `
+      ${L.origin === 'kw' ? '<div class="kw-badge">⚔ KASTER\'S WAR</div>' : ''}
+      <div class="card-portrait">${portraitHTML(L)}</div>
+      <div class="card-name">${L.name}</div>
+      <div class="card-rank rank-${L.rank}">${stars} ${L.rank}</div>
+      <div class="card-category" style="color:${catMeta?.color}">${catMeta?.label}</div>
+      <div style="font-size:8px;color:#9a8a6a;margin-bottom:3px;letter-spacing:0.3px;">🌍 ${NATION[L.id] || '—'}</div>
+      <div class="card-buff">${L.desc}</div>
+      ${L.supremeSkill ? `<div class="card-debuff" style="margin-top:2px;font-size:8px;color:#c39bd3">👑 Has Supreme skill</div>` : ''}
+    `;
+
+    // drag events
+    card.addEventListener('dragstart', e => {
+      if (used) { e.preventDefault(); return; }
+      e.dataTransfer.setData('leaderId', L.id);
+      card.classList.add('dragging');
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+
+    // Click to assign (first available slot)
+    card.addEventListener('click', () => {
+      if (used) return;
+      const targetSlot = findBestSlot(L);
+      if (targetSlot) placeLeader(L.id, targetSlot);
+    });
+
+    // tooltip
+    card.addEventListener('mouseenter', e => showTooltip(L, e));
+    card.addEventListener('mousemove', e => moveTooltip(e));
+    card.addEventListener('mouseleave', hideTooltip);
+
+    grid.appendChild(card);
+  });
+}
+
+function findBestSlot(L) {
+  // Prefer matching category slot, then supreme if empty
+  if (L.category && L.category !== 'civilian' && council[L.category] === null) return L.category;
+  const catSlots = ['military','economy','diplomacy','science'];
+  for (const s of catSlots) { if (council[s] === null) return s; }
+  if (council.supreme === null) return 'supreme';
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// DRAG & DROP
+// ─────────────────────────────────────────────────────────────────────────
+
+function setupSlotDrop(slotEl) {
+  slotEl.addEventListener('dragover', e => {
+    e.preventDefault();
+    slotEl.classList.add('drop-target');
+  });
+  slotEl.addEventListener('dragleave', () => slotEl.classList.remove('drop-target'));
+  slotEl.addEventListener('drop', e => {
+    e.preventDefault();
+    slotEl.classList.remove('drop-target');
+    const leaderId = e.dataTransfer.getData('leaderId');
+    if (leaderId) placeLeader(leaderId, slotEl.dataset.slot);
+  });
+}
+
+function placeLeader(leaderId, slotKey) {
+  // If leader already in another slot, remove it first
+  Object.keys(council).forEach(k => { if (council[k] === leaderId) council[k] = null; });
+  council[slotKey] = leaderId;
+  swapCount++;
+  document.getElementById('swap-count').textContent = swapCount;
+  refresh(true);
+}
+
+function removeLeader(slotKey) {
+  council[slotKey] = null;
+  refresh(true);
+}
+
+function refresh(animate) {
+  renderCouncil();
+  renderRoster();
+  renderStats(animate);
+  renderSynergies();
+}
+
+function renderSynergies() {
+  const log = window.__synergyLog || [];
+  const el = document.getElementById('synergy-list');
+  if (!log.length) {
+    el.innerHTML = '<div style="font-size:11px;color:#555;line-height:1.5;">No synergies yet — add leaders of the same nation, known allies, or rivals to trigger bonds.</div>';
+    return;
+  }
+  const color = { nation:'#6ec1ff', friend:'#4cff91', dislike:'#ff6666' };
+  el.innerHTML = log.map(s => `<div style="font-size:11px;line-height:1.5;color:${color[s.kind]};margin-bottom:5px;">${s.text}</div>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// BATTLE
+// ─────────────────────────────────────────────────────────────────────────
+
+const ENEMIES = [
+  { name: 'Nomad Raiders', strength: 60 },
+  { name: 'City-States Coalition', strength: 110 },
+  { name: 'Imperial Legion', strength: 160 },
+  { name: 'Mongol Vanguard', strength: 200 },
+];
+let enemyIndex = 0;
+
+function doBattle() {
+  const stats = calcStats();
+  const enemy = ENEMIES[enemyIndex];
+  const roll = (Math.random() * 30) - 15; // ±15 luck
+  const playerStr = stats.military + roll;
+  const resultEl = document.getElementById('battle-result');
+
+  if (playerStr >= enemy.strength) {
+    resultEl.className = 'battle-result win';
+    resultEl.textContent = `✔ VICTORY over ${enemy.name}! (Your Mil: ${Math.round(stats.military)} vs ${enemy.strength}) — Province gained!`;
+    enemyIndex = Math.min(enemyIndex + 1, ENEMIES.length - 1);
+    updateEnemy();
+  } else {
+    resultEl.className = 'battle-result lose';
+    resultEl.textContent = `✘ DEFEAT by ${enemy.name}. (Your Mil: ${Math.round(stats.military)} vs ${enemy.strength}) — Reinforce your council!`;
+  }
+}
+
+function updateEnemy() {
+  const enemy = ENEMIES[enemyIndex];
+  document.getElementById('enemy-info').innerHTML = `Enemy: <strong>${enemy.name}</strong> — Strength <strong>${enemy.strength}</strong>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// TOOLTIP
+// ─────────────────────────────────────────────────────────────────────────
+
+function showTooltip(L, e) {
+  const tt = document.getElementById('tooltip');
+  const friendNames = (FRIENDS[L.id] || []).map(id => LEADERS.find(x=>x.id===id)?.name).filter(Boolean);
+  document.getElementById('tt-name').textContent = L.portrait + ' ' + L.name + '  —  🌍 ' + (NATION[L.id] || '');
+  let relLines = '';
+  if (friendNames.length) relLines += '🤝 Allies: ' + friendNames.join(', ') + '\n';
+  if ((DISLIKES[L.id] || []).length) relLines += '💢 Dislikes: ' + DISLIKES[L.id].join(', ');
+  document.getElementById('tt-skill').textContent = (L.supremeSkill ? '👑 Supreme Skill: ' + L.supremeSkill + '\n' : '') + relLines;
+  document.getElementById('tt-skill').style.whiteSpace = 'pre-line';
+  document.getElementById('tt-buff').textContent = '✅ ' + L.desc;
+  const db = L.supremeDebuff ? Object.entries(L.supremeDebuff).map(([k,v]) => `${k} ${v}%`).join(', ') : '';
+  document.getElementById('tt-debuff').textContent = db ? '⚠ Supreme Downside: ' + db : '';
+  tt.classList.add('visible');
+  moveTooltip(e);
+}
+function moveTooltip(e) {
+  const tt = document.getElementById('tooltip');
+  tt.style.left = (e.clientX + 14) + 'px';
+  tt.style.top  = (e.clientY + 14) + 'px';
+}
+function hideTooltip() {
+  document.getElementById('tooltip').classList.remove('visible');
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────
+
+refresh(false);
+</script>
+</body>
+</html>

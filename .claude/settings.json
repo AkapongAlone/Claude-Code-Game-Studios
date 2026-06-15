@@ -50,7 +50,8 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://raw.githubusercontent.com/AkapongAlone/Claude-Code-Game-Studios/main/design/art/Kaster.png\")",
       "mcp__replicate__create_predictions",
       "Bash(curl -s \"https://replicate.delivery/xezq/QkYKE3Q2NBJ1H1k837aVMXyVPfxIxlxzqnJVIFuuGulesUvWA/tmpp977mrh7.png\" -o /Users/ek/Desktop/gaming/Claude-Code-Game-Studios/assets/art/characters/char_kaster_base_portrait.png)",
-      "Bash(curl -s \"https://replicate.delivery/xezq/DDBSkocQh6YdC5grkL26lk3eXxpAvL9Rim0JwXYJJ575XqXLA/tmp_7lols63.png\" -o /Users/ek/Desktop/gaming/Claude-Code-Game-Studios/assets/art/characters/char_kaster_base_portrait.png)"
+      "Bash(curl -s \"https://replicate.delivery/xezq/DDBSkocQh6YdC5grkL26lk3eXxpAvL9Rim0JwXYJJ575XqXLA/tmp_7lols63.png\" -o /Users/ek/Desktop/gaming/Claude-Code-Game-Studios/assets/art/characters/char_kaster_base_portrait.png)",
+      "Bash(node -e ' *)"
     ],
     "deny": [
       "Bash(rm -rf *)",
